@@ -1,0 +1,25 @@
+{
+  "name": "rapidcal",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Blazingly fast cross-platform desktop calendar engineered in Rust & SolidJS with Google & Microsoft Outlook multi-account sync",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.2.0",
+    "solid-js": "^1.9.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.6",
+    "@tauri-apps/cli": "^2.2.0",
+    "tailwindcss": "^4.0.6",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5",
+    "vite-plugin-solid": "^2.11.0"
+  }
+}

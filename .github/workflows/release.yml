@@ -1,0 +1,173 @@
+name: Cross-Platform Release & Deployment
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag name (e.g. v0.1.0)'
+        required: false
+        default: 'v__VERSION__'
+        type: string
+      prerelease:
+        description: 'Mark release as a pre-release'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  verify-before-release:
+    name: Pre-Release Quality Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Tauri v2 Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libxdo-dev \
+            libssl-dev \
+            libdbus-1-dev \
+            pkg-config \
+            build-essential \
+            curl \
+            wget \
+            file
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Rust stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Rust build cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install frontend dependencies & build bundle
+        run: |
+          npm ci
+          npm run build
+
+      - name: Verify Rust formatting, Clippy, and tests
+        run: |
+          cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
+          cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+          cargo check --manifest-path src-tauri/Cargo.toml --features tauri/custom-protocol
+          cargo test --manifest-path src-tauri/Cargo.toml
+
+  publish-tauri:
+    name: Build & Package Desktop (${{ matrix.label }})
+    needs: verify-before-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: Linux x86_64 (.AppImage / .deb / .rpm)
+            platform: ubuntu-22.04
+            args: ''
+            rust_targets: ''
+          - label: macOS Universal (.dmg / .app)
+            platform: macos-latest
+            args: '--target universal-apple-darwin'
+            rust_targets: 'aarch64-apple-darwin,x86_64-apple-darwin'
+          - label: macOS Apple Silicon (aarch64 .dmg)
+            platform: macos-latest
+            args: '--target aarch64-apple-darwin --bundles dmg'
+            rust_targets: 'aarch64-apple-darwin'
+          - label: macOS Intel (x86_64 .dmg)
+            platform: macos-latest
+            args: '--target x86_64-apple-darwin --bundles dmg'
+            rust_targets: 'x86_64-apple-darwin'
+          - label: Windows x86_64 (.msi / NSIS .exe)
+            platform: windows-latest
+            args: ''
+            rust_targets: ''
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux packaging dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libxdo-dev \
+            libssl-dev \
+            libdbus-1-dev \
+            pkg-config \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libfuse2
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Rust stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_targets }}
+
+      - name: Rust build cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: ${{ matrix.platform }}-${{ matrix.rust_targets }}
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build and publish Tauri v2 desktop installers
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPIMAGE_EXTRACT_AND_RUN: 1
+        with:
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag_name || 'v__VERSION__' }}
+          releaseName: 'RapidCal v__VERSION__'
+          releaseBody: |
+            ## RapidCal v__VERSION__
+
+            Lightweight, offline-first cross-platform desktop calendar engineered in Rust (Tauri v2) and SolidJS.
+
+            ### Downloads by Platform
+            - **macOS (Universal — Apple Silicon & Intel)**: `RapidCal___VERSION___universal.dmg` / `RapidCal.app.tar.gz`
+            - **macOS (Apple Silicon M1/M2/M3/M4)**: `RapidCal___VERSION___aarch64.dmg`
+            - **macOS (Intel x86_64)**: `RapidCal___VERSION___x64.dmg`
+            - **Windows (x64)**: `RapidCal___VERSION___x64-setup.exe` (NSIS) or `RapidCal___VERSION___x64_en-US.msi` (MSI)
+            - **Linux (x86_64)**: `RapidCal___VERSION___amd64.AppImage`, `RapidCal___VERSION___amd64.deb`, or `RapidCal-__VERSION__-1.x86_64.rpm`
+          releaseDraft: true
+          prerelease: ${{ inputs.prerelease || false }}
+          args: ${{ matrix.args }}

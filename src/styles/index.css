@@ -1,0 +1,59 @@
+@import "tailwindcss";
+@custom-variant light (&:where(.light, .light *));
+
+@layer base {
+  :root {
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  .font-mono-tabular {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Custom hairline scrollbars for ultra-clean Cron/Linear look */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(113, 113, 122, 0.28);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(113, 113, 122, 0.5);
+}
+
+/* Diagonal stripes for tentative / unconfirmed events and busy-mirror blocks */
+.bg-tentative-stripes {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 5px,
+    rgba(255, 255, 255, 0.08) 5px,
+    rgba(255, 255, 255, 0.08) 10px
+  );
+}
+
+.light .bg-tentative-stripes {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 5px,
+    rgba(0, 0, 0, 0.06) 5px,
+    rgba(0, 0, 0, 0.06) 10px
+  );
+}

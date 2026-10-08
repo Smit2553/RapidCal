@@ -1,0 +1,33 @@
+[package]
+name = "rapidcal"
+version = "0.1.0"
+description = "Blazingly fast cross-platform desktop calendar in Rust with Google & Microsoft Outlook sync"
+authors = ["RapidCal Team"]
+edition = "2021"
+
+[lib]
+name = "rapidcal_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.32", features = ["bundled"] }
+chrono = { version = "0.4", features = ["serde"] }
+chrono-tz = "0.9"
+rrule = "0.13"
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+keyring = "3"
+aes-gcm = "0.10"
+sha2 = "0.10"
+base64 = "0.22"
+rand = "0.8"
+uuid = { version = "1", features = ["v4", "serde"] }
+url = "2"
+open = "5"
+thiserror = "2"
