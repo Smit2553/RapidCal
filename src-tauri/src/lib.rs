@@ -226,12 +226,24 @@ fn save_oauth_config(
     state.db.get_oauth_config()
 }
 
-#[tauri::command]
-fn open_external_url(url: String) -> Result<(), String> {
-    if !url.starts_with("https://") && !url.starts_with("http://") {
+pub fn validate_external_url(url: &str) -> Result<String, String> {
+    let trimmed = url.trim();
+    let parsed = url::Url::parse(trimmed)
+        .map_err(|_| "Only http:// and https:// URLs are allowed".to_string())?;
+    if !matches!(parsed.scheme(), "http" | "https") || parsed.host_str().is_none() {
         return Err("Only http:// and https:// URLs are allowed".to_string());
     }
-    open::that(&url).map_err(|e| format!("Failed to open URL: {}", e))
+    Ok(parsed.to_string())
+}
+
+pub fn launch_external_url(url: &str) -> Result<(), String> {
+    let validated = validate_external_url(url)?;
+    open::that_detached(&validated).map_err(|e| format!("Failed to open URL: {}", e))
+}
+
+#[tauri::command]
+fn open_external_url(url: String) -> Result<(), String> {
+    launch_external_url(&url)
 }
 
 #[tauri::command]
@@ -308,4 +320,44 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running RapidCal tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_open_external_url_rejects_non_http_schemes_and_hostless_urls() {
+        for bad_url in [
+            "",
+            "   ",
+            "http://",
+            "https://",
+            "javascript:alert(1)",
+            "file:///C:/Windows/System32/cmd.exe",
+            r"C:\Windows\System32\calc.exe",
+            r"\\attacker\share\payload.exe",
+            "cmd://calc",
+            "ftp://example.com/file",
+        ] {
+            let err = open_external_url(bad_url.to_string()).unwrap_err();
+            assert_eq!(err, "Only http:// and https:// URLs are allowed");
+        }
+    }
+
+    #[test]
+    fn test_validate_external_url_normalizes_whitespace_and_uppercase_schemes() {
+        assert_eq!(
+            validate_external_url("  https://meet.google.com/rcd-core-sync  ").unwrap(),
+            "https://meet.google.com/rcd-core-sync"
+        );
+        assert_eq!(
+            validate_external_url("HTTPS://teams.microsoft.com/l/meetup-join/123").unwrap(),
+            "https://teams.microsoft.com/l/meetup-join/123"
+        );
+        assert_eq!(
+            validate_external_url("Http://localhost:8080/callback").unwrap(),
+            "http://localhost:8080/callback"
+        );
+    }
 }

@@ -29,5 +29,5 @@ base64 = "0.22"
 rand = "0.8"
 uuid = { version = "1", features = ["v4", "serde"] }
 url = "2"
-open = "5"
+open = { version = "5", features = ["shellexecute-on-windows"] }
 thiserror = "2"

@@ -1469,8 +1469,12 @@ export const api = {
   },
 
   async openExternalUrl(url: string): Promise<void> {
-    if (isTauriRuntime()) return invoke<void>("open_external_url", { url });
-    window.open(url, "_blank", "noopener,noreferrer");
+    const trimmed = url.trim();
+    if (isTauriRuntime())
+      return invoke<void>("open_external_url", { url: trimmed });
+    if (/^https?:\/\//i.test(trimmed)) {
+      window.open(trimmed, "_blank", "noopener,noreferrer");
+    }
   },
 
   async resetDemoData(): Promise<void> {

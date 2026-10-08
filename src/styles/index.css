@@ -2,9 +2,15 @@
 @custom-variant light (&:where(.light, .light *));
 
 @layer base {
-  :root {
+  :root,
+  .dark {
+    color-scheme: dark;
     --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  .light {
+    color-scheme: light;
   }
 
   body {

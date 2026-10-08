@@ -73,7 +73,7 @@ pub async fn authenticate_microsoft_account(
         .append_pair("code_challenge_method", "S256")
         .append_pair("state", &csrf_state);
 
-    open::that(auth_url.as_str())
+    open::that_detached(auth_url.as_str())
         .map_err(|e| format!("Failed to open browser for Microsoft OAuth2: {}", e))?;
 
     let code = wait_for_oauth_callback(listener, &csrf_state, 180).await?;

@@ -81,7 +81,9 @@ pub fn setup_tray_and_hibernation(
             "join_meeting" => {
                 let snap = sync_for_menu.get_status_snapshot();
                 if let Some(url) = snap.up_next_conference_url {
-                    let _ = open::that(url);
+                    if crate::launch_external_url(&url).is_err() {
+                        show_and_focus_main_window(app_handle);
+                    }
                 } else {
                     show_and_focus_main_window(app_handle);
                 }
@@ -157,6 +159,7 @@ pub fn setup_tray_and_hibernation(
 
 pub fn show_and_focus_main_window(app: &AppHandle) {
     if let Some(win) = app.get_webview_window("main") {
+        let _ = win.unminimize();
         let _ = win.show();
         let _ = win.set_focus();
     }
