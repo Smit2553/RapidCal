@@ -368,8 +368,7 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
             calendar_id: "cal-acme-eng".to_string(),
             title: "Weekly Design & Product Sync".to_string(),
             description: Some(
-                "Catching up on weekly progress and upcoming milestones."
-                    .to_string(),
+                "Catching up on weekly progress and upcoming milestones.".to_string(),
             ),
             location: Some("Google Meet".to_string()),
             start_ts: up_next_start,

@@ -73,8 +73,12 @@ pub async fn authenticate_microsoft_account(
         .append_pair("code_challenge_method", "S256")
         .append_pair("state", &csrf_state);
 
-    open::that_detached(auth_url.as_str())
-        .map_err(|e| format!("Could not open your web browser for Microsoft sign-in: {}", e))?;
+    open::that_detached(auth_url.as_str()).map_err(|e| {
+        format!(
+            "Could not open your web browser for Microsoft sign-in: {}",
+            e
+        )
+    })?;
 
     let code = wait_for_oauth_callback(listener, &csrf_state, 180).await?;
 
