@@ -13,13 +13,20 @@ import {
   setRightInspectorOpen,
   setSelectedEvent,
   startNewEventDraft,
+  userPreferences,
   viewportEvents,
 } from "../store/calendarStore";
 
-const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const WEEKDAYS_MON = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const WEEKDAYS_SUN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function MonthView() {
-  const days = createMemo(() => getMonthGridDays(anchorDate()));
+  const weekdays = createMemo(() =>
+    userPreferences().weekStartsOn === "sunday" ? WEEKDAYS_SUN : WEEKDAYS_MON
+  );
+  const days = createMemo(() =>
+    getMonthGridDays(anchorDate(), userPreferences().weekStartsOn)
+  );
   const today = new Date();
 
   const eventsForDay = (day: Date) => {
@@ -34,7 +41,7 @@ export function MonthView() {
     <div class="flex-1 flex flex-col min-w-0 min-h-0 bg-zinc-950 light:bg-white select-none">
       {/* Weekday Header Row */}
       <div class="grid grid-cols-7 border-b border-zinc-800/80 light:border-zinc-200 bg-zinc-950/90 light:bg-zinc-50">
-        <For each={WEEKDAYS}>
+        <For each={weekdays()}>
           {(wd) => (
             <div class="py-2 px-3 text-xs font-semibold uppercase tracking-wider text-zinc-400 light:text-zinc-600 border-r last:border-r-0 border-zinc-800/80 light:border-zinc-200">
               {wd}
@@ -55,9 +62,13 @@ export function MonthView() {
               <div
                 onClick={() => setAnchorDate(day)}
                 onDblClick={() => {
+                  const startHour = userPreferences().workingHoursStart ?? 9;
+                  const durSecs =
+                    (userPreferences().defaultEventDurationMins || 30) * 60;
                   const s =
-                    Math.floor(startOfDay(day).getTime() / 1000) + 9 * 3600;
-                  startNewEventDraft(s, s + 3600, false);
+                    Math.floor(startOfDay(day).getTime() / 1000) +
+                    startHour * 3600;
+                  startNewEventDraft(s, s + durSecs, false);
                 }}
                 class={`border-r border-b border-zinc-800/75 light:border-zinc-200 p-1.5 flex flex-col gap-1 overflow-hidden transition-colors ${
                   inMonth()
@@ -118,7 +129,10 @@ export function MonthView() {
                           </span>
                           <Show when={!ev.isAllDay}>
                             <span class="text-[9px] font-mono-tabular text-zinc-400 light:text-zinc-600 shrink-0">
-                              {formatTimeShort(ev.startTs)}
+                              {formatTimeShort(
+                                ev.startTs,
+                                userPreferences().timeFormat
+                              )}
                             </span>
                           </Show>
                         </button>

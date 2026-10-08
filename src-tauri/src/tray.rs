@@ -69,7 +69,7 @@ pub fn setup_tray_and_hibernation(
     let sync_for_menu = sync_orchestrator.clone();
     let mut builder = TrayIconBuilder::with_id("rapidcal-tray")
         .menu(&menu)
-        .tooltip("RapidCal — Sub-ms Desktop Calendar")
+        .tooltip("RapidCal")
         .on_menu_event(move |app_handle, event| match event.id.as_ref() {
             "open_window" | "up_next" => {
                 show_and_focus_main_window(app_handle);

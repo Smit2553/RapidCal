@@ -7,6 +7,7 @@ import {
   setSelectedEvent,
   startNewEventDraft,
   updateRsvpOptimistic,
+  userPreferences,
   viewportEvents,
 } from "../store/calendarStore";
 import type { ViewportEvent } from "../types/calendar";
@@ -39,11 +40,10 @@ export function AgendaView() {
         <div class="flex items-center justify-between border-b border-zinc-800 light:border-zinc-200 pb-3">
           <div>
             <h2 class="text-base font-semibold text-zinc-100 light:text-zinc-900">
-              Upcoming Schedule & Multi-Account Dossier
+              Upcoming Schedule
             </h2>
             <p class="text-xs text-zinc-400 light:text-zinc-600">
-              Chronological stream across Google Calendar & Microsoft Outlook
-              with 1-click Video Join and inline RSVP
+              Your upcoming meetings and events across all connected calendars
             </p>
           </div>
           <button
@@ -59,11 +59,11 @@ export function AgendaView() {
           when={groupedByDay().length > 0}
           fallback={
             <div class="rounded-xl border border-zinc-800 light:border-zinc-200 p-12 text-center text-zinc-500">
-              No events scheduled in this 30-day window. Press{" "}
+              No events scheduled in the next 30 days. Press{" "}
               <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono-tabular">
                 ⌘K
               </kbd>{" "}
-              to quick-add with natural language.
+              to quickly add an event.
             </div>
           }
         >
@@ -117,7 +117,7 @@ export function AgendaView() {
                                 </Show>
                                 <Show when={ev.busyMirrorOfEventId}>
                                   <span class="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/15 text-amber-300">
-                                    Busy Mirror
+                                    Blocked Time
                                   </span>
                                 </Show>
                               </div>
@@ -126,7 +126,11 @@ export function AgendaView() {
                                 <span>
                                   {ev.isAllDay
                                     ? "All Day"
-                                    : formatTimeRange(ev.startTs, ev.endTs)}
+                                    : formatTimeRange(
+                                        ev.startTs,
+                                        ev.endTs,
+                                        userPreferences().timeFormat
+                                      )}
                                 </span>
                                 <Show when={ev.location}>
                                   <span>• {ev.location}</span>
@@ -135,7 +139,7 @@ export function AgendaView() {
                             </div>
                           </div>
 
-                          {/* Right Actions: Inline RSVP + 1-Click Video Join */}
+                          {/* Right Actions: Inline Response + Video Join */}
                           <div
                             class="flex items-center gap-2 shrink-0"
                             onClick={(e) => e.stopPropagation()}
@@ -176,7 +180,7 @@ export function AgendaView() {
                               >
                                 <span>
                                   Join{" "}
-                                  {(ev.conferenceProvider || "Meet").toUpperCase()}
+                                  {(ev.conferenceProvider || "Call").toUpperCase()}
                                 </span>
                               </button>
                             </Show>

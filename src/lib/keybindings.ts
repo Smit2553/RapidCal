@@ -1,11 +1,13 @@
 import {
   accountsModalOpen,
+  closeSettings,
   commandPaletteOpen,
   deleteEventOptimistic,
   joinActiveOrNextMeeting,
   jumpToday,
   leftSidebarOpen,
   openCommandPalette,
+  openSettings,
   rightInspectorOpen,
   selectedEvent,
   setAccountsModalOpen,
@@ -15,6 +17,7 @@ import {
   setViewMode,
   stepDate,
   triggerSyncNowAction,
+  viewMode,
 } from "../store/calendarStore";
 
 export function registerGlobalKeybindings(): () => void {
@@ -29,7 +32,18 @@ export function registerGlobalKeybindings(): () => void {
 
     const mod = e.metaKey || e.ctrlKey;
 
-    // Cmd/Ctrl + K -> Command Palette & NLP Quick-Add
+    // Cmd/Ctrl + , -> Open or close Settings
+    if (mod && e.key === ",") {
+      e.preventDefault();
+      if (viewMode() === "settings") {
+        closeSettings();
+      } else {
+        openSettings("general");
+      }
+      return;
+    }
+
+    // Cmd/Ctrl + K -> Command Bar & Quick Add
     if (mod && e.key.toLowerCase() === "k") {
       e.preventDefault();
       if (commandPaletteOpen()) {
@@ -40,28 +54,28 @@ export function registerGlobalKeybindings(): () => void {
       return;
     }
 
-    // Cmd/Ctrl + F -> Search mode in Command Palette
+    // Cmd/Ctrl + F -> Search Events
     if (mod && e.key.toLowerCase() === "f") {
       e.preventDefault();
       openCommandPalette("search");
       return;
     }
 
-    // Cmd/Ctrl + J -> 1-Click Join Video Meeting (Meet / Teams / Zoom)
+    // Cmd/Ctrl + J -> Join Active or Upcoming Meeting
     if (mod && e.key.toLowerCase() === "j") {
       e.preventDefault();
       joinActiveOrNextMeeting();
       return;
     }
 
-    // Cmd/Ctrl + R -> Instant incremental sync
+    // Cmd/Ctrl + R -> Sync Calendars
     if (mod && e.key.toLowerCase() === "r") {
       e.preventDefault();
       void triggerSyncNowAction();
       return;
     }
 
-    // Escape closes modals
+    // Escape closes modals or returns from Settings
     if (e.key === "Escape") {
       if (commandPaletteOpen()) {
         setCommandPaletteOpen(false);
@@ -69,6 +83,10 @@ export function registerGlobalKeybindings(): () => void {
       }
       if (accountsModalOpen()) {
         setAccountsModalOpen(false);
+        return;
+      }
+      if (viewMode() === "settings" && !isInput) {
+        closeSettings();
         return;
       }
     }

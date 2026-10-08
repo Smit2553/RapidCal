@@ -24,12 +24,20 @@ export function addMonths(d: Date, months: number): Date {
   return c;
 }
 
-export function startOfWeekMonday(d: Date): Date {
+export function startOfWeek(
+  d: Date,
+  weekStartsOn: "monday" | "sunday" = "monday"
+): Date {
   const c = startOfDay(d);
   const day = c.getDay(); // 0=Sun..6=Sat
-  const diff = day === 0 ? -6 : 1 - day;
+  const diff =
+    weekStartsOn === "sunday" ? -day : day === 0 ? -6 : 1 - day;
   c.setDate(c.getDate() + diff);
   return c;
+}
+
+export function startOfWeekMonday(d: Date): Date {
+  return startOfWeek(d, "monday");
 }
 
 export function isSameDay(a: Date, b: Date): boolean {
@@ -42,7 +50,8 @@ export function isSameDay(a: Date, b: Date): boolean {
 
 export function getVisibleDaysForView(
   anchor: Date,
-  view: CalendarViewMode
+  view: CalendarViewMode,
+  weekStartsOn: "monday" | "sunday" = "monday"
 ): Date[] {
   if (view === "day") {
     return [startOfDay(anchor)];
@@ -55,25 +64,25 @@ export function getVisibleDaysForView(
     const mon = startOfWeekMonday(anchor);
     return [0, 1, 2, 3, 4].map((i) => addDays(mon, i));
   }
-  // Default 7-day week starting Monday
-  const mon = startOfWeekMonday(anchor);
-  return [0, 1, 2, 3, 4, 5, 6].map((i) => addDays(mon, i));
+  const wkStart = startOfWeek(anchor, weekStartsOn);
+  return [0, 1, 2, 3, 4, 5, 6].map((i) => addDays(wkStart, i));
 }
 
 export function getViewportRangeSeconds(
   anchor: Date,
-  view: CalendarViewMode
+  view: CalendarViewMode,
+  weekStartsOn: "monday" | "sunday" = "monday"
 ): [number, number] {
   if (view === "month") {
     const firstOfMonth = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
-    const gridStart = startOfWeekMonday(firstOfMonth);
+    const gridStart = startOfWeek(firstOfMonth, weekStartsOn);
     const gridEnd = endOfDay(addDays(gridStart, 41));
     return [
       Math.floor(gridStart.getTime() / 1000) - 86400,
       Math.floor(gridEnd.getTime() / 1000) + 86400,
     ];
   }
-  if (view === "agenda") {
+  if (view === "agenda" || view === "settings") {
     const start = startOfDay(addDays(anchor, -1));
     const end = endOfDay(addDays(anchor, 30));
     return [
@@ -81,7 +90,7 @@ export function getViewportRangeSeconds(
       Math.floor(end.getTime() / 1000),
     ];
   }
-  const days = getVisibleDaysForView(anchor, view);
+  const days = getVisibleDaysForView(anchor, view, weekStartsOn);
   const first = startOfDay(days[0]);
   const last = endOfDay(days[days.length - 1]);
   return [
@@ -90,9 +99,12 @@ export function getViewportRangeSeconds(
   ];
 }
 
-export function getMonthGridDays(anchor: Date): Date[] {
+export function getMonthGridDays(
+  anchor: Date,
+  weekStartsOn: "monday" | "sunday" = "monday"
+): Date[] {
   const firstOfMonth = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
-  const start = startOfWeekMonday(firstOfMonth);
+  const start = startOfWeek(firstOfMonth, weekStartsOn);
   const days: Date[] = [];
   for (let i = 0; i < 42; i++) {
     days.push(addDays(start, i));
@@ -101,6 +113,9 @@ export function getMonthGridDays(anchor: Date): Date[] {
 }
 
 export function formatHeaderTitle(anchor: Date, view: CalendarViewMode): string {
+  if (view === "settings") {
+    return "Settings";
+  }
   const monthFmt = new Intl.DateTimeFormat("en-US", {
     month: "long",
     year: "numeric",
@@ -116,10 +131,16 @@ export function formatHeaderTitle(anchor: Date, view: CalendarViewMode): string 
   return monthFmt.format(anchor);
 }
 
-export function formatTimeShort(tsSeconds: number): string {
+export function formatTimeShort(
+  tsSeconds: number,
+  timeFormat: "12h" | "24h" = "12h"
+): string {
   const d = new Date(tsSeconds * 1000);
   const hours = d.getHours();
   const mins = d.getMinutes();
+  if (timeFormat === "24h") {
+    return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+  }
   const ampm = hours >= 12 ? "PM" : "AM";
   const h12 = hours % 12 === 0 ? 12 : hours % 12;
   if (mins === 0) {
@@ -128,8 +149,24 @@ export function formatTimeShort(tsSeconds: number): string {
   return `${h12}:${mins.toString().padStart(2, "0")} ${ampm}`;
 }
 
-export function formatTimeRange(startTs: number, endTs: number): string {
-  return `${formatTimeShort(startTs)} – ${formatTimeShort(endTs)}`;
+export function formatTimeRange(
+  startTs: number,
+  endTs: number,
+  timeFormat: "12h" | "24h" = "12h"
+): string {
+  return `${formatTimeShort(startTs, timeFormat)} – ${formatTimeShort(endTs, timeFormat)}`;
+}
+
+export function formatHourLabel(
+  hour24: number,
+  timeFormat: "12h" | "24h" = "12h"
+): string {
+  if (timeFormat === "24h") {
+    return `${String(hour24).padStart(2, "0")}:00`;
+  }
+  const ampm = hour24 >= 12 ? "PM" : "AM";
+  const h12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+  return `${h12} ${ampm}`;
 }
 
 export function formatDateInputValue(tsSeconds: number): string {
@@ -159,19 +196,28 @@ export function combineDateAndTimeInputs(
 
 export function formatSecondaryTzHour(
   hour24: number,
-  secondaryTz: string
+  secondaryTz: string,
+  timeFormat: "12h" | "24h" = "12h"
 ): string {
   try {
     const ref = new Date();
     ref.setHours(hour24, 0, 0, 0);
+    if (timeFormat === "24h") {
+      const fmt = new Intl.DateTimeFormat("en-US", {
+        hour: "2-digit",
+        hour12: false,
+        timeZone: secondaryTz,
+      });
+      return `${fmt.format(ref)}:00`;
+    }
     const fmt = new Intl.DateTimeFormat("en-US", {
-      hour: "2-digit",
-      hour12: false,
+      hour: "numeric",
+      hour12: true,
       timeZone: secondaryTz,
     });
     return fmt.format(ref);
   } catch {
-    return String(hour24).padStart(2, "0");
+    return `${String(hour24).padStart(2, "0")}:00`;
   }
 }
 
@@ -180,8 +226,8 @@ export function getPrimaryTimezoneAbbr(): string {
     const parts = new Intl.DateTimeFormat("en-US", {
       timeZoneName: "short",
     }).formatToParts(new Date());
-    return parts.find((p) => p.type === "timeZoneName")?.value || "LOC";
+    return parts.find((p) => p.type === "timeZoneName")?.value || "Local";
   } catch {
-    return "LOC";
+    return "Local";
   }
 }

@@ -180,28 +180,28 @@ pub async fn wait_for_oauth_callback(
             (
                 "HTTP/1.1 400 Bad Request",
                 format!(
-                    "<html><body style='background:#09090b;color:#f4f4f5;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0'><div style='border:1px solid #27272a;padding:32px;border-radius:12px;max-width:420px;text-align:center'><h2 style='color:#f43f5e;margin-top:0'>Authentication Cancelled</h2><p style='color:#a1a1aa'>Provider returned: {}</p></div></body></html>",
+                    "<html><body style='background:#09090b;color:#f4f4f5;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0'><div style='border:1px solid #27272a;padding:32px;border-radius:12px;max-width:420px;text-align:center'><h2 style='color:#f43f5e;margin-top:0'>Sign-In Cancelled</h2><p style='color:#a1a1aa'>Sign-in could not be completed ({})</p></div></body></html>",
                     err
                 ),
-                Err(format!("OAuth provider error: {}", err)),
+                Err(format!("Sign-in cancelled: {}", err)),
             )
         } else if state_opt.as_deref() != Some(expected_state) {
             (
                 "HTTP/1.1 400 Bad Request",
-                "<html><body style='background:#09090b;color:#f4f4f5;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0'><div style='border:1px solid #27272a;padding:32px;border-radius:12px;max-width:420px;text-align:center'><h2 style='color:#f43f5e;margin-top:0'>State Mismatch</h2><p style='color:#a1a1aa'>CSRF state verification failed.</p></div></body></html>".to_string(),
-                Err("OAuth CSRF state mismatch".to_string()),
+                "<html><body style='background:#09090b;color:#f4f4f5;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0'><div style='border:1px solid #27272a;padding:32px;border-radius:12px;max-width:420px;text-align:center'><h2 style='color:#f43f5e;margin-top:0'>Verification Failed</h2><p style='color:#a1a1aa'>Please close this window and try connecting your account again.</p></div></body></html>".to_string(),
+                Err("Sign-in security check did not match. Please try again.".to_string()),
             )
         } else if let Some(code) = code_opt {
             (
                 "HTTP/1.1 200 OK",
-                "<html><body style='background:#09090b;color:#f4f4f5;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0'><div style='border:1px solid #27272a;background:#18181b;padding:32px;border-radius:12px;max-width:420px;text-align:center'><h2 style='color:#818cf8;margin-top:0'>Connected to RapidCal</h2><p style='color:#a1a1aa;font-size:14px'>Your calendar account is authenticated. You can close this tab and return to RapidCal.</p></div></body></html>".to_string(),
+                "<html><body style='background:#09090b;color:#f4f4f5;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0'><div style='border:1px solid #27272a;background:#18181b;padding:32px;border-radius:12px;max-width:420px;text-align:center'><h2 style='color:#818cf8;margin-top:0'>Connected to RapidCal</h2><p style='color:#a1a1aa;font-size:14px'>Your calendar account is now connected. You can close this tab and return to RapidCal.</p></div></body></html>".to_string(),
                 Ok(code),
             )
         } else {
             (
                 "HTTP/1.1 400 Bad Request",
-                "<html><body>Missing authorization code</body></html>".to_string(),
-                Err("Missing authorization code in callback".to_string()),
+                "<html><body>Sign-in incomplete. Please return to RapidCal and try again.</body></html>".to_string(),
+                Err("Sign-in was not completed".to_string()),
             )
         };
 

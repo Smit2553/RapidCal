@@ -34,7 +34,7 @@ impl SyncOrchestrator {
             state: "idle".to_string(),
             pending_outbox_count: 0,
             last_sync_at: Some(Utc::now().to_rfc3339()),
-            last_message: "All calendars in sync (SQLite WAL)".to_string(),
+            last_message: "All calendars up to date".to_string(),
             up_next_label: None,
             up_next_event_id: None,
             up_next_conference_url: None,
@@ -165,7 +165,7 @@ impl SyncOrchestrator {
         {
             if let Ok(mut guard) = self.status.lock() {
                 guard.state = "syncing".to_string();
-                guard.last_message = "Draining outbox & checking delta tokens…".to_string();
+                guard.last_message = "Syncing your calendars…".to_string();
             }
         }
 
@@ -268,8 +268,11 @@ impl SyncOrchestrator {
         if let Ok(mut guard) = self.status.lock() {
             guard.state = "idle".to_string();
             guard.last_sync_at = Some(Utc::now().to_rfc3339());
-            guard.last_message =
-                format!("Synced {} accounts • 0ms WAL read ready", synced_accounts);
+            guard.last_message = if synced_accounts == 1 {
+                "1 account up to date".to_string()
+            } else {
+                format!("All {} accounts up to date", synced_accounts)
+            };
         }
 
         Ok(self.get_status_snapshot())

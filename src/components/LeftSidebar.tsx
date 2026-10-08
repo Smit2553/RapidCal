@@ -8,18 +8,29 @@ import {
   accounts,
   anchorDate,
   calendars,
+  closeSettings,
   leftSidebarOpen,
   openCommandPalette,
-  setAccountsModalOpen,
+  openSettings,
   setAnchorDate,
   toggleCalendar,
+  userPreferences,
+  viewMode,
   viewportEvents,
 } from "../store/calendarStore";
 
-const WEEKDAY_INITIALS = ["M", "T", "W", "T", "F", "S", "S"];
+const WEEKDAY_INITIALS_MON = ["M", "T", "W", "T", "F", "S", "S"];
+const WEEKDAY_INITIALS_SUN = ["S", "M", "T", "W", "T", "F", "S"];
 
 export function LeftSidebar() {
-  const miniDays = createMemo(() => getMonthGridDays(anchorDate()));
+  const miniDays = createMemo(() =>
+    getMonthGridDays(anchorDate(), userPreferences().weekStartsOn)
+  );
+  const weekdayInitials = createMemo(() =>
+    userPreferences().weekStartsOn === "sunday"
+      ? WEEKDAY_INITIALS_SUN
+      : WEEKDAY_INITIALS_MON
+  );
   const today = new Date();
 
   const daysWithEvents = createMemo(() => {
@@ -67,7 +78,7 @@ export function LeftSidebar() {
             </div>
 
             <div class="grid grid-cols-7 text-center text-[10px] font-mono-tabular text-zinc-500 mb-1">
-              <For each={WEEKDAY_INITIALS}>
+              <For each={weekdayInitials()}>
                 {(d) => <div class="py-0.5">{d}</div>}
               </For>
             </div>
@@ -87,7 +98,12 @@ export function LeftSidebar() {
                   return (
                     <button
                       type="button"
-                      onClick={() => setAnchorDate(day)}
+                      onClick={() => {
+                        setAnchorDate(day);
+                        if (viewMode() === "settings") {
+                          closeSettings();
+                        }
+                      }}
                       class={`h-7 rounded-md text-[11px] font-mono-tabular relative flex flex-col items-center justify-center transition-colors ${
                         isSelected()
                           ? "bg-indigo-600 text-white font-semibold"
@@ -109,18 +125,18 @@ export function LeftSidebar() {
             </div>
           </div>
 
-          {/* Connected Multi-Account Tree (Google + Microsoft Outlook) */}
+          {/* Connected Accounts & Calendars */}
           <div class="space-y-3">
             <div class="flex items-center justify-between px-1">
               <span class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                Accounts & Calendars
+                My Calendars
               </span>
               <button
                 type="button"
-                onClick={() => setAccountsModalOpen(true)}
+                onClick={() => openSettings("accounts")}
                 class="text-[11px] text-indigo-400 hover:text-indigo-300 font-medium"
               >
-                + Connect
+                + Add Account
               </button>
             </div>
 
@@ -158,7 +174,11 @@ export function LeftSidebar() {
                             ? "bg-emerald-400"
                             : "bg-indigo-400"
                         }`}
-                        title={`Status: ${account.status}`}
+                        title={
+                          account.status === "connected"
+                            ? "Connected"
+                            : "Sample account"
+                        }
                       />
                     </div>
 
@@ -204,8 +224,8 @@ export function LeftSidebar() {
                               </span>
                             </div>
                             <Show when={cal.isPrimary}>
-                              <span class="text-[9px] font-mono-tabular text-zinc-500">
-                                pri
+                              <span class="text-[9px] text-zinc-500">
+                                Default
                               </span>
                             </Show>
                           </label>
@@ -219,24 +239,28 @@ export function LeftSidebar() {
           </div>
         </div>
 
-        {/* Footer: Keyboard Shortcut Cheat Sheet & NLP Quick-Add Trigger */}
-        <div class="p-3 border-t border-zinc-800/80 light:border-zinc-200 space-y-2 text-[11px] text-zinc-500">
+        {/* Footer: Quick Add & Settings */}
+        <div class="p-3 border-t border-zinc-800/80 light:border-zinc-200 space-y-1.5 text-[11px] text-zinc-500">
           <button
             type="button"
             onClick={() => openCommandPalette("nlp")}
             class="w-full py-1.5 px-2.5 rounded-md border border-zinc-800 light:border-zinc-200 bg-zinc-900/60 light:bg-white hover:border-indigo-500/40 text-left flex items-center justify-between text-zinc-300 light:text-zinc-700 transition-colors"
           >
-            <span>⚡ Natural Language Add</span>
+            <span>⚡ Quick Add Event</span>
             <kbd class="font-mono-tabular text-[10px] px-1 rounded bg-zinc-800 light:bg-zinc-200">
               C
             </kbd>
           </button>
-          <div class="grid grid-cols-2 gap-1 text-[10px] font-mono-tabular text-zinc-500 px-1">
-            <div>D/3/5/W: Grid</div>
-            <div>M/A: Month/List</div>
-            <div>⌘K: Command</div>
-            <div>⌘J: Join Video</div>
-          </div>
+          <button
+            type="button"
+            onClick={() => openSettings("general")}
+            class="w-full py-1.5 px-2.5 rounded-md border border-zinc-800 light:border-zinc-200 bg-zinc-900/60 light:bg-white hover:border-indigo-500/40 text-left flex items-center justify-between text-zinc-300 light:text-zinc-700 transition-colors"
+          >
+            <span>⚙️ Settings & Preferences</span>
+            <kbd class="font-mono-tabular text-[10px] px-1 rounded bg-zinc-800 light:bg-zinc-200">
+              ⌘,
+            </kbd>
+          </button>
         </div>
       </aside>
     </Show>

@@ -170,14 +170,14 @@ export function EventInspector() {
           }
         >
           <form onSubmit={handleSave} class="p-3.5 space-y-4 flex-1 flex flex-col">
-            {/* Header Status & Dirty Outbox Badge */}
+            {/* Header Status */}
             <div class="flex items-center justify-between">
               <span class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                {selectedEvent() ? "Event Inspector" : "New Event Draft"}
+                {selectedEvent() ? "Event Details" : "New Event"}
               </span>
               <Show when={selectedEvent()?.isDirty}>
-                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono-tabular bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                  Outbox Queued
+                <span class="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                  Sync pending
                 </span>
               </Show>
             </div>
@@ -193,7 +193,7 @@ export function EventInspector() {
               />
             </div>
 
-            {/* 1-Click Video Conference Join Button */}
+            {/* Video Call Join Button */}
             <Show when={selectedEvent()?.conferenceUrl || conferenceUrl()}>
               <div class="rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-2.5 flex items-center justify-between gap-2">
                 <div class="min-w-0">
@@ -201,7 +201,7 @@ export function EventInspector() {
                     {(
                       selectedEvent()?.conferenceProvider || "Video"
                     ).toUpperCase()}{" "}
-                    Meeting
+                    Call
                   </div>
                   <div class="text-[10px] font-mono-tabular text-indigo-400/80 truncate">
                     {selectedEvent()?.conferenceUrl || conferenceUrl()}
@@ -289,10 +289,10 @@ export function EventInspector() {
               </Show>
             </div>
 
-            {/* Recurrence (RFC 5545 RRULE) */}
+            {/* Repeat Options */}
             <div class="space-y-1.5">
               <label class="text-[11px] font-medium text-zinc-400 light:text-zinc-600">
-                Recurrence Rule (RFC 5545)
+                Repeat
               </label>
               <select
                 value={rrule()}
@@ -308,7 +308,7 @@ export function EventInspector() {
 
               <Show when={selectedEvent()?.isRecurring}>
                 <div class="pt-1 flex items-center justify-between text-[11px] text-zinc-400">
-                  <span>Edit Scope:</span>
+                  <span>Apply changes to:</span>
                   <div class="flex rounded border border-zinc-800 overflow-hidden">
                     <button
                       type="button"
@@ -319,7 +319,7 @@ export function EventInspector() {
                           : "bg-zinc-900 text-zinc-400"
                       }`}
                     >
-                      This instance
+                      This event
                     </button>
                     <button
                       type="button"
@@ -330,14 +330,14 @@ export function EventInspector() {
                           : "bg-zinc-900 text-zinc-400"
                       }`}
                     >
-                      All in series
+                      All events
                     </button>
                   </div>
                 </div>
               </Show>
             </div>
 
-            {/* Location & Conference Link */}
+            {/* Location & Video Link */}
             <div class="space-y-2">
               <input
                 type="text"
@@ -350,7 +350,7 @@ export function EventInspector() {
                 type="text"
                 value={conferenceUrl()}
                 onInput={(e) => setConferenceUrl(e.currentTarget.value)}
-                placeholder="Video URL (Meet / Teams / Zoom)…"
+                placeholder="Video call link (Google Meet, Teams, Zoom)…"
                 class="w-full h-7 px-2.5 rounded-md border border-zinc-800 light:border-zinc-300 bg-zinc-900 light:bg-white text-xs font-mono-tabular text-zinc-200 light:text-zinc-800"
               />
             </div>
@@ -358,24 +358,24 @@ export function EventInspector() {
             {/* Notes / Description */}
             <div class="space-y-1">
               <label class="text-[11px] font-medium text-zinc-400 light:text-zinc-600">
-                Notes & Agenda
+                Notes
               </label>
               <textarea
                 rows={3}
                 value={description()}
                 onInput={(e) => setDescription(e.currentTarget.value)}
-                placeholder="Agenda, docs, or meeting notes…"
+                placeholder="Meeting agenda, links, or notes…"
                 class="w-full p-2 rounded-md border border-zinc-800 light:border-zinc-300 bg-zinc-900 light:bg-white text-xs text-zinc-200 light:text-zinc-800 resize-none"
               />
             </div>
 
-            {/* Attendee List & Self RSVP */}
+            {/* Guests & Your Response */}
             <Show when={selectedEvent()}>
               {(sel) => (
                 <div class="space-y-2 rounded-lg border border-zinc-800/80 light:border-zinc-200 bg-zinc-900/30 light:bg-white p-2.5">
                   <div class="flex items-center justify-between">
                     <span class="text-[11px] font-medium text-zinc-400 light:text-zinc-600">
-                      Your RSVP
+                      Going?
                     </span>
                     <div class="flex rounded-md border border-zinc-800 light:border-zinc-200 overflow-hidden text-[11px]">
                       {(
@@ -409,7 +409,7 @@ export function EventInspector() {
                               {att.displayName || att.email}
                             </span>
                             <span
-                              class={`px-1.5 py-0.2 rounded text-[10px] font-mono-tabular ${
+                              class={`px-1.5 py-0.2 rounded text-[10px] ${
                                 att.responseStatus === "accepted"
                                   ? "text-emerald-400"
                                   : att.responseStatus === "tentative"
@@ -419,7 +419,13 @@ export function EventInspector() {
                                       : "text-zinc-500"
                               }`}
                             >
-                              {att.responseStatus}
+                              {att.responseStatus === "accepted"
+                                ? "Going"
+                                : att.responseStatus === "tentative"
+                                  ? "Maybe"
+                                  : att.responseStatus === "declined"
+                                    ? "Declined"
+                                    : "Invited"}
                             </span>
                           </div>
                         )}
@@ -430,7 +436,7 @@ export function EventInspector() {
               )}
             </Show>
 
-            {/* Cross-Account Busy Blocking (Google <-> Microsoft Outlook) */}
+            {/* Block Time on Another Calendar */}
             <Show
               when={
                 selectedEvent() &&
@@ -440,11 +446,11 @@ export function EventInspector() {
             >
               <div class="rounded-lg border border-zinc-800/80 light:border-zinc-200 bg-zinc-900/40 light:bg-white p-2.5 space-y-2">
                 <div class="text-[11px] font-semibold text-zinc-300 light:text-zinc-700">
-                  🛡 Cross-Account Busy Block
+                  🛡 Block Time on Another Calendar
                 </div>
                 <p class="text-[10px] text-zinc-500 leading-relaxed">
-                  Mirror this event onto another account (e.g., Personal Google →
-                  Work Outlook) so colleagues see you as Busy.
+                  Copy this time slot onto another calendar so people see
+                  you&apos;re unavailable.
                 </p>
                 <select
                   value={mirrorCalendarId()}
@@ -464,7 +470,7 @@ export function EventInspector() {
                         setRedactMirrorTitle(e.currentTarget.checked)
                       }
                     />
-                    <span>Redact title as Private</span>
+                    <span>Hide event title (show as Busy)</span>
                   </label>
                   <button
                     type="button"

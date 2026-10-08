@@ -37,7 +37,7 @@ pub async fn authenticate_microsoft_account(
     let config = db.get_oauth_config()?;
     if config.ms_client_id.trim().is_empty() {
         return Err(
-            "Microsoft Entra / Azure Client ID is not configured yet. Open Accounts & Sync Settings to enter your Client ID."
+            "Microsoft sign-in is not set up yet. Open Settings → Accounts to enter your Microsoft App ID."
                 .to_string(),
         );
     }
@@ -74,7 +74,7 @@ pub async fn authenticate_microsoft_account(
         .append_pair("state", &csrf_state);
 
     open::that_detached(auth_url.as_str())
-        .map_err(|e| format!("Failed to open browser for Microsoft OAuth2: {}", e))?;
+        .map_err(|e| format!("Could not open your web browser for Microsoft sign-in: {}", e))?;
 
     let code = wait_for_oauth_callback(listener, &csrf_state, 180).await?;
 

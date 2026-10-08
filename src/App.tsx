@@ -5,6 +5,7 @@ import { CommandPalette } from "./components/CommandPalette";
 import { EventInspector } from "./components/EventInspector";
 import { LeftSidebar } from "./components/LeftSidebar";
 import { MonthView } from "./components/MonthView";
+import { SettingsView } from "./components/SettingsView";
 import { TimeGridView } from "./components/TimeGridView";
 import { TopBar } from "./components/TopBar";
 import { registerGlobalKeybindings } from "./lib/keybindings";
@@ -42,7 +43,6 @@ export default function App() {
     <div class="h-screen w-screen flex flex-col bg-zinc-950 light:bg-white text-zinc-100 light:text-zinc-900 overflow-hidden">
       <TopBar />
 
-      {/* 3-Pane Cron / Linear Precision Workspace */}
       <main class="flex-1 flex min-h-0 min-w-0 overflow-hidden">
         <LeftSidebar />
 
@@ -53,16 +53,19 @@ export default function App() {
           <Match when={viewMode() === "agenda"}>
             <AgendaView />
           </Match>
+          <Match when={viewMode() === "settings"}>
+            <SettingsView />
+          </Match>
         </Switch>
 
-        <EventInspector />
+        <Show when={viewMode() !== "settings"}>
+          <EventInspector />
+        </Show>
       </main>
 
-      {/* Modals & Command Bar */}
       <CommandPalette />
       <AccountsModal />
 
-      {/* Sub-millisecond Action Toast */}
       <Show when={toastMessage()}>
         {(msg) => (
           <div class="fixed bottom-4 right-4 z-50 px-3.5 py-2 rounded-lg border border-indigo-500/40 bg-zinc-900/95 light:bg-zinc-900 text-xs font-medium text-zinc-100 shadow-xl flex items-center gap-2">

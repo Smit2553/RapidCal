@@ -199,13 +199,24 @@ impl Database {
     }
 
     pub fn ensure_demo_seed(&self) -> Result<(), String> {
-        let count: i64 = {
+        let (count, has_legacy_dev_seed): (i64, bool) = {
             let conn = self.conn.lock().map_err(|e| e.to_string())?;
-            conn.query_row("SELECT COUNT(*) FROM accounts", [], |row| row.get(0))
-                .map_err(|e| e.to_string())?
+            let c: i64 = conn
+                .query_row("SELECT COUNT(*) FROM accounts", [], |row| row.get(0))
+                .map_err(|e| e.to_string())?;
+            let legacy_count: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM events_master WHERE id = 'evt-rust-arch' AND title LIKE '%SQLite%'",
+                    [],
+                    |row| row.get(0),
+                )
+                .unwrap_or(0);
+            (c, legacy_count > 0)
         };
         if count == 0 {
             seed::seed_multi_account_demo(self)?;
+        } else if has_legacy_dev_seed {
+            self.reset_demo_seed()?;
         }
         Ok(())
     }

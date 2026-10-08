@@ -9,6 +9,7 @@ import {
 } from "solid-js";
 import {
   endOfDay,
+  formatHourLabel,
   formatSecondaryTzHour,
   formatTimeRange,
   getPrimaryTimezoneAbbr,
@@ -26,6 +27,7 @@ import {
   setRightInspectorOpen,
   setSelectedEvent,
   startNewEventDraft,
+  userPreferences,
   viewMode,
   viewportEvents,
 } from "../store/calendarStore";
@@ -38,7 +40,11 @@ export function TimeGridView() {
   let scrollContainerRef: HTMLDivElement | undefined;
 
   const visibleDays = createMemo(() =>
-    getVisibleDaysForView(anchorDate(), viewMode())
+    getVisibleDaysForView(
+      anchorDate(),
+      viewMode(),
+      userPreferences().weekStartsOn
+    )
   );
 
   const [nowDate, setNowDate] = createSignal(new Date());
@@ -59,9 +65,10 @@ export function TimeGridView() {
   } | null>(null);
 
   onMount(() => {
-    // Scroll to 08:00 AM initially for immediate focus on core working hours
+    // Scroll to the user's configured start of working hours initially
     if (scrollContainerRef) {
-      scrollContainerRef.scrollTop = 8 * HOUR_HEIGHT_PX - 24;
+      const startHour = userPreferences().workingHoursStart ?? 9;
+      scrollContainerRef.scrollTop = Math.max(0, startHour * HOUR_HEIGHT_PX - 24);
     }
 
     const onWindowMouseMove = (e: MouseEvent) => {
@@ -189,12 +196,18 @@ export function TimeGridView() {
 
   return (
     <div class="flex-1 flex flex-col min-w-0 min-h-0 bg-zinc-950 light:bg-white select-none">
-      {/* Sticky Column Header Row: Dual-Timezone Labels + Day Headers */}
+      {/* Sticky Column Header Row: Timezone Labels + Day Headers */}
       <div class="flex border-b border-zinc-800/80 light:border-zinc-200 bg-zinc-950/90 light:bg-zinc-50 shrink-0">
-        {/* Dual Timezone Gutter Header */}
-        <div class="w-24 shrink-0 border-r border-zinc-800/80 light:border-zinc-200 px-2 py-2 flex items-end justify-between text-[10px] font-mono-tabular text-zinc-500">
-          <span>{secondaryTz()}</span>
-          <span class="text-zinc-400 light:text-zinc-600 font-semibold">
+        {/* Timezone Gutter Header */}
+        <div
+          class={`${
+            userPreferences().showSecondaryTimezone ? "w-24" : "w-16"
+          } shrink-0 border-r border-zinc-800/80 light:border-zinc-200 px-2 py-2 flex items-end justify-between text-[10px] font-mono-tabular text-zinc-500`}
+        >
+          <Show when={userPreferences().showSecondaryTimezone}>
+            <span>{secondaryTz()}</span>
+          </Show>
+          <span class="text-zinc-400 light:text-zinc-600 font-semibold ml-auto">
             {primaryTz}
           </span>
         </div>
@@ -269,9 +282,11 @@ export function TimeGridView() {
         ref={scrollContainerRef}
         class="flex-1 overflow-y-auto relative flex"
       >
-        {/* Dual-Timezone Monospace Gutter */}
+        {/* Timezone Gutter */}
         <div
-          class="w-24 shrink-0 border-r border-zinc-800/80 light:border-zinc-200 bg-zinc-950 light:bg-zinc-50 select-none"
+          class={`${
+            userPreferences().showSecondaryTimezone ? "w-24" : "w-16"
+          } shrink-0 border-r border-zinc-800/80 light:border-zinc-200 bg-zinc-950 light:bg-zinc-50 select-none`}
           style={{ height: `${24 * HOUR_HEIGHT_PX}px` }}
         >
           <For each={DAY_HOURS}>
@@ -280,11 +295,17 @@ export function TimeGridView() {
                 class="relative pr-2 pl-1.5 flex items-start justify-between text-[10px] font-mono-tabular"
                 style={{ height: `${HOUR_HEIGHT_PX}px` }}
               >
-                <span class="-mt-1.5 text-zinc-600 light:text-zinc-400">
-                  {formatSecondaryTzHour(hour, secondaryTz())}:00
-                </span>
-                <span class="-mt-1.5 text-zinc-400 light:text-zinc-600">
-                  {String(hour).padStart(2, "0")}:00
+                <Show when={userPreferences().showSecondaryTimezone}>
+                  <span class="-mt-1.5 text-zinc-600 light:text-zinc-400">
+                    {formatSecondaryTzHour(
+                      hour,
+                      secondaryTz(),
+                      userPreferences().timeFormat
+                    )}
+                  </span>
+                </Show>
+                <span class="-mt-1.5 text-zinc-400 light:text-zinc-600 ml-auto">
+                  {formatHourLabel(hour, userPreferences().timeFormat)}
                 </span>
               </div>
             )}
@@ -317,14 +338,16 @@ export function TimeGridView() {
                 const offsetY = Math.max(0, e.clientY - rect.top);
                 const quarterIndex = Math.floor(offsetY / (HOUR_HEIGHT_PX / 4));
                 const startTs = dayStartTs() + quarterIndex * 900;
+                const defaultDurSecs =
+                  (userPreferences().defaultEventDurationMins || 30) * 60;
                 setDragState({
                   mode: "create",
                   initialDayStartTs: dayStartTs(),
                   dayStartTs: dayStartTs(),
                   initialStartTs: startTs,
-                  initialEndTs: startTs + 1800,
+                  initialEndTs: startTs + defaultDurSecs,
                   currentStartTs: startTs,
-                  currentEndTs: startTs + 1800,
+                  currentEndTs: startTs + defaultDurSecs,
                   startClientY: e.clientY,
                 });
               };
@@ -395,7 +418,8 @@ export function TimeGridView() {
                           <div class="text-[10px] font-mono-tabular text-indigo-300">
                             {formatTimeRange(
                               st().currentStartTs,
-                              st().currentEndTs
+                              st().currentEndTs,
+                              userPreferences().timeFormat
                             )}
                           </div>
                         </div>
@@ -492,7 +516,7 @@ export function TimeGridView() {
                               <Show when={ev.isDirty}>
                                 <span
                                   class="w-1.5 h-1.5 rounded-full bg-amber-400"
-                                  title="Pending Outbox Sync"
+                                  title="Waiting to sync"
                                 />
                               </Show>
                               <Show when={ev.isRecurring}>
@@ -509,7 +533,8 @@ export function TimeGridView() {
                           <div class="text-[10px] font-mono-tabular text-zinc-300 light:text-zinc-700 truncate">
                             {formatTimeRange(
                               effectiveStartTs(),
-                              effectiveEndTs()
+                              effectiveEndTs(),
+                              userPreferences().timeFormat
                             )}
                           </div>
 

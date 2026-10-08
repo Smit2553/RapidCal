@@ -4,7 +4,27 @@ export type CalendarViewMode =
   | "workweek"
   | "week"
   | "month"
-  | "agenda";
+  | "agenda"
+  | "settings";
+
+export type SettingsTab =
+  | "general"
+  | "accounts"
+  | "calendars"
+  | "timezones"
+  | "sync"
+  | "shortcuts";
+
+export interface UserPreferences {
+  defaultView: Exclude<CalendarViewMode, "settings">;
+  timeFormat: "12h" | "24h";
+  weekStartsOn: "monday" | "sunday";
+  defaultEventDurationMins: 15 | 30 | 45 | 60;
+  workingHoursStart: number;
+  workingHoursEnd: number;
+  showSecondaryTimezone: boolean;
+  highlightWeekends: boolean;
+}
 
 export interface Account {
   id: string;

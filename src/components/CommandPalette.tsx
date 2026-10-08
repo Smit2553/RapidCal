@@ -3,12 +3,13 @@ import { formatDateInputValue, formatTimeRange } from "../lib/dateUtils";
 import { api } from "../lib/tauri";
 import {
   calendars,
+  closeSettings,
   commandPaletteInitialMode,
   commandPaletteOpen,
   joinActiveOrNextMeeting,
   jumpToday,
+  openSettings,
   saveEventOptimistic,
-  setAccountsModalOpen,
   setAnchorDate,
   setCommandPaletteOpen,
   setRightInspectorOpen,
@@ -16,6 +17,8 @@ import {
   setViewMode,
   toggleTheme,
   triggerSyncNowAction,
+  userPreferences,
+  viewMode,
 } from "../store/calendarStore";
 import type { NlpParseResult, ViewportEvent } from "../types/calendar";
 
@@ -35,7 +38,6 @@ export function CommandPalette() {
     }
   });
 
-  // Live Rust NLP parse or SQLite FTS5 search as the user types
   createEffect(() => {
     const q = input().trim();
     const currentMode = mode();
@@ -75,7 +77,7 @@ export function CommandPalette() {
     await saveEventOptimistic({
       calendarId: targetCalId,
       title: preview.title,
-      description: `Created via RapidCal Natural Language Quick-Add ("${preview.rawInput}")`,
+      description: "",
       location: preview.location,
       startTs: preview.startTs,
       endTs: preview.endTs,
@@ -93,13 +95,16 @@ export function CommandPalette() {
       })),
     });
 
+    if (viewMode() === "settings") {
+      closeSettings();
+    }
     setAnchorDate(new Date(preview.startTs * 1000));
     setCommandPaletteOpen(false);
   };
 
   const matchedCalName = () => {
     const id = nlpPreview()?.matchedCalendarId;
-    return calendars().find((c) => c.id === id)?.name || "Primary Calendar";
+    return calendars().find((c) => c.id === id)?.name || "Default Calendar";
   };
 
   return (
@@ -124,7 +129,7 @@ export function CommandPalette() {
                     : "text-zinc-400 hover:text-zinc-200"
                 }`}
               >
-                ⚡ Natural Language Quick-Add (C)
+                ⚡ Quick Add Event (C)
               </button>
               <button
                 type="button"
@@ -135,7 +140,7 @@ export function CommandPalette() {
                     : "text-zinc-400 hover:text-zinc-200"
                 }`}
               >
-                🔍 SQLite FTS5 Search (⌘F)
+                🔍 Search Events (⌘F)
               </button>
             </div>
             <kbd class="text-[10px] font-mono-tabular px-1.5 py-0.5 rounded bg-zinc-800 light:bg-zinc-200 text-zinc-400">
@@ -152,20 +157,20 @@ export function CommandPalette() {
               onInput={(e) => setInput(e.currentTarget.value)}
               placeholder={
                 mode() === "nlp"
-                  ? 'Try: "Sync with Sarah tomorrow 2pm-3:30pm every Wed at Meet @Acme"'
-                  : "Search titles, locations, notes, or attendees (<2ms FTS5)…"
+                  ? 'Type an event, e.g., "Coffee with Sarah tomorrow 2pm-3pm at Google Meet"'
+                  : "Search events by title, location, notes, or guests…"
               }
               class="w-full bg-transparent text-sm text-zinc-100 light:text-zinc-900 placeholder:text-zinc-500 focus:outline-none"
             />
           </form>
 
-          {/* Live Rust Natural Language Structured Token Preview */}
+          {/* New Event Preview */}
           <Show when={mode() === "nlp" && nlpPreview()}>
             {(preview) => (
               <div class="p-3.5 border-b border-zinc-800/80 light:border-zinc-200 bg-indigo-950/20 light:bg-indigo-50/60 space-y-2.5">
                 <div class="flex items-center justify-between">
                   <span class="text-[10px] font-semibold uppercase tracking-wider text-indigo-400">
-                    Rust NLP Live Parse Preview
+                    New Event Preview
                   </span>
                   <button
                     type="button"
@@ -184,10 +189,14 @@ export function CommandPalette() {
                     📅 {formatDateInputValue(preview().startTs)} •{" "}
                     {preview().isAllDay
                       ? "All Day"
-                      : formatTimeRange(preview().startTs, preview().endTs)}
+                      : formatTimeRange(
+                          preview().startTs,
+                          preview().endTs,
+                          userPreferences().timeFormat
+                        )}
                   </span>
                   <span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 light:text-indigo-700 font-medium">
-                    🗂 @{matchedCalName()}
+                    🗂 {matchedCalName()}
                   </span>
                   <Show when={preview().rruleHuman}>
                     <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono-tabular">
@@ -209,17 +218,20 @@ export function CommandPalette() {
             )}
           </Show>
 
-          {/* FTS5 Search Matches */}
+          {/* Search Matches */}
           <Show when={searchResults().length > 0}>
             <div class="p-2 max-h-60 overflow-y-auto border-b border-zinc-800/80 light:border-zinc-200">
               <div class="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-                Matching Events (SQLite FTS5)
+                Matching Events
               </div>
               <For each={searchResults()}>
                 {(ev) => (
                   <button
                     type="button"
                     onClick={() => {
+                      if (viewMode() === "settings") {
+                        closeSettings();
+                      }
                       setAnchorDate(new Date(ev.startTs * 1000));
                       setSelectedEvent(ev);
                       setRightInspectorOpen(true);
@@ -241,7 +253,11 @@ export function CommandPalette() {
                     </div>
                     <span class="text-[11px] font-mono-tabular text-zinc-400 shrink-0">
                       {formatDateInputValue(ev.startTs)} •{" "}
-                      {formatTimeRange(ev.startTs, ev.endTs)}
+                      {formatTimeRange(
+                        ev.startTs,
+                        ev.endTs,
+                        userPreferences().timeFormat
+                      )}
                     </span>
                   </button>
                 )}
@@ -249,7 +265,7 @@ export function CommandPalette() {
             </div>
           </Show>
 
-          {/* Instant Keyboard Actions */}
+          {/* Quick Actions */}
           <div class="p-2 space-y-1">
             <div class="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
               Quick Actions
@@ -263,7 +279,7 @@ export function CommandPalette() {
                 }}
                 class="px-2.5 py-1.5 rounded-md hover:bg-zinc-900 light:hover:bg-zinc-100 flex items-center justify-between text-zinc-300 light:text-zinc-700"
               >
-                <span>🎥 Join Active/Next Video Meeting</span>
+                <span>🎥 Join Active/Next Video Call</span>
                 <kbd class="font-mono-tabular text-[10px] text-zinc-500">
                   ⌘J
                 </kbd>
@@ -276,7 +292,7 @@ export function CommandPalette() {
                 }}
                 class="px-2.5 py-1.5 rounded-md hover:bg-zinc-900 light:hover:bg-zinc-100 flex items-center justify-between text-zinc-300 light:text-zinc-700"
               >
-                <span>🔄 Sync All Accounts Now</span>
+                <span>🔄 Sync All Calendars Now</span>
                 <kbd class="font-mono-tabular text-[10px] text-zinc-500">
                   ⌘R
                 </kbd>
@@ -289,7 +305,7 @@ export function CommandPalette() {
                 }}
                 class="px-2.5 py-1.5 rounded-md hover:bg-zinc-900 light:hover:bg-zinc-100 flex items-center justify-between text-zinc-300 light:text-zinc-700"
               >
-                <span>📍 Jump to Today</span>
+                <span>📍 Go to Today</span>
                 <kbd class="font-mono-tabular text-[10px] text-zinc-500">T</kbd>
               </button>
               <button
@@ -300,7 +316,7 @@ export function CommandPalette() {
                 }}
                 class="px-2.5 py-1.5 rounded-md hover:bg-zinc-900 light:hover:bg-zinc-100 flex items-center justify-between text-zinc-300 light:text-zinc-700"
               >
-                <span>📋 Switch to Agenda Dossier</span>
+                <span>📋 View Upcoming Schedule</span>
                 <kbd class="font-mono-tabular text-[10px] text-zinc-500">A</kbd>
               </button>
               <button
@@ -311,7 +327,7 @@ export function CommandPalette() {
                 }}
                 class="px-2.5 py-1.5 rounded-md hover:bg-zinc-900 light:hover:bg-zinc-100 flex items-center justify-between text-zinc-300 light:text-zinc-700"
               >
-                <span>🌗 Toggle Dark / Light Precision Theme</span>
+                <span>🌗 Switch Dark / Light Mode</span>
                 <kbd class="font-mono-tabular text-[10px] text-zinc-500">
                   Theme
                 </kbd>
@@ -320,13 +336,13 @@ export function CommandPalette() {
                 type="button"
                 onClick={() => {
                   setCommandPaletteOpen(false);
-                  setAccountsModalOpen(true);
+                  openSettings("general");
                 }}
                 class="px-2.5 py-1.5 rounded-md hover:bg-zinc-900 light:hover:bg-zinc-100 flex items-center justify-between text-zinc-300 light:text-zinc-700"
               >
-                <span>🔐 OAuth2 PKCE & Account Settings</span>
+                <span>⚙️ Open Settings & Accounts</span>
                 <kbd class="font-mono-tabular text-[10px] text-zinc-500">
-                  Vault
+                  ⌘,
                 </kbd>
               </button>
             </div>

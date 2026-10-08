@@ -38,7 +38,7 @@ pub async fn authenticate_google_account(
     let config = db.get_oauth_config()?;
     if config.google_client_id.trim().is_empty() {
         return Err(
-            "Google OAuth Client ID is not configured yet. Open Accounts & Sync Settings to enter your Google Desktop Client ID."
+            "Google sign-in is not set up yet. Open Settings → Accounts to enter your Google App ID."
                 .to_string(),
         );
     }
@@ -61,7 +61,7 @@ pub async fn authenticate_google_account(
         .append_pair("state", &csrf_state);
 
     open::that_detached(auth_url.as_str())
-        .map_err(|e| format!("Failed to open browser for Google OAuth2: {}", e))?;
+        .map_err(|e| format!("Could not open your web browser for Google sign-in: {}", e))?;
 
     let code = wait_for_oauth_callback(listener, &csrf_state, 180).await?;
 

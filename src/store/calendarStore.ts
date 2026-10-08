@@ -12,14 +12,64 @@ import type {
   CalendarViewMode,
   OAuthConfig,
   OutboxMutation,
+  SettingsTab,
   SyncStatusSnapshot,
   UpsertEventInput,
+  UserPreferences,
   ViewportEvent,
 } from "../types/calendar";
 
-const [viewMode, setViewModeSignal] = createSignal<CalendarViewMode>("week");
+const PREFS_STORAGE_KEY = "rapidcal.preferences.v1";
+const THEME_STORAGE_KEY = "rapidcal.theme.v1";
+
+const DEFAULT_PREFERENCES: UserPreferences = {
+  defaultView: "week",
+  timeFormat: "12h",
+  weekStartsOn: "monday",
+  defaultEventDurationMins: 60,
+  workingHoursStart: 8,
+  workingHoursEnd: 17,
+  showSecondaryTimezone: true,
+  highlightWeekends: true,
+};
+
+function loadInitialPreferences(): UserPreferences {
+  try {
+    const raw = localStorage.getItem(PREFS_STORAGE_KEY);
+    if (!raw) return DEFAULT_PREFERENCES;
+    return { ...DEFAULT_PREFERENCES, ...JSON.parse(raw) };
+  } catch {
+    return DEFAULT_PREFERENCES;
+  }
+}
+
+function loadInitialTheme(): "dark" | "light" {
+  try {
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
+    if (saved === "light" || saved === "dark") return saved;
+  } catch {
+    // ignore
+  }
+  return "dark";
+}
+
+const initialPrefs = loadInitialPreferences();
+const [userPreferences, setUserPreferencesSignal] =
+  createSignal<UserPreferences>(initialPrefs);
+
+const [viewMode, setViewModeSignal] = createSignal<CalendarViewMode>(
+  initialPrefs.defaultView
+);
+const [lastCalendarViewMode, setLastCalendarViewMode] = createSignal<
+  Exclude<CalendarViewMode, "settings">
+>(initialPrefs.defaultView);
+const [activeSettingsTab, setActiveSettingsTab] =
+  createSignal<SettingsTab>("general");
+
 const [anchorDate, setAnchorDateSignal] = createSignal<Date>(new Date());
-const [theme, setThemeSignal] = createSignal<"dark" | "light">("dark");
+const [theme, setThemeSignal] = createSignal<"dark" | "light">(
+  loadInitialTheme()
+);
 
 const [leftSidebarOpen, setLeftSidebarOpen] = createSignal<boolean>(true);
 const [rightInspectorOpen, setRightInspectorOpen] = createSignal<boolean>(true);
@@ -28,7 +78,8 @@ const [commandPaletteOpen, setCommandPaletteOpen] =
 const [commandPaletteInitialMode, setCommandPaletteInitialMode] = createSignal<
   "search" | "nlp"
 >("nlp");
-const [accountsModalOpen, setAccountsModalOpen] = createSignal<boolean>(false);
+const [accountsModalOpen, setAccountsModalOpenSignal] =
+  createSignal<boolean>(false);
 
 const [accounts, setAccounts] = createSignal<Account[]>([]);
 const [calendars, setCalendars] = createSignal<Calendar[]>([]);
@@ -49,7 +100,7 @@ const [syncStatus, setSyncStatus] = createSignal<SyncStatusSnapshot>({
   state: "idle",
   pendingOutboxCount: 0,
   lastSyncAt: null,
-  lastMessage: "Initializing SQLite WAL…",
+  lastMessage: "Ready",
   upNextLabel: null,
   upNextEventId: null,
   upNextConferenceUrl: null,
@@ -78,8 +129,49 @@ export function showToast(msg: string) {
   toastTimer = setTimeout(() => setToastMessage(null), 3200);
 }
 
+export function applyThemeToDom(next: "dark" | "light") {
+  const root = document.documentElement;
+  if (next === "dark") {
+    root.classList.add("dark");
+    root.classList.remove("light");
+  } else {
+    root.classList.add("light");
+    root.classList.remove("dark");
+  }
+}
+
+export function setTheme(next: "dark" | "light") {
+  setThemeSignal(next);
+  applyThemeToDom(next);
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, next);
+  } catch {
+    // ignore
+  }
+}
+
+export function updateUserPreferences(partial: Partial<UserPreferences>) {
+  const prev = userPreferences();
+  const next: UserPreferences = { ...prev, ...partial };
+  setUserPreferencesSignal(next);
+  try {
+    localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // ignore
+  }
+  if (partial.weekStartsOn && partial.weekStartsOn !== prev.weekStartsOn) {
+    void refreshViewport();
+  }
+}
+
 export async function refreshViewport() {
-  const [startTs, endTs] = getViewportRangeSeconds(anchorDate(), viewMode());
+  const activeCalView =
+    viewMode() === "settings" ? lastCalendarViewMode() : viewMode();
+  const [startTs, endTs] = getViewportRangeSeconds(
+    anchorDate(),
+    activeCalView,
+    userPreferences().weekStartsOn
+  );
   const events = await api.getViewportEvents(startTs, endTs);
   setViewportEvents(events);
 
@@ -112,10 +204,11 @@ export async function refreshMetadata() {
 }
 
 export async function initializeCalendarStore() {
+  applyThemeToDom(theme());
   await refreshMetadata();
   await refreshViewport();
 
-  // Select the live "Up Next" event or first event by default so the right inspector is immediately populated
+  // Select the live "Up Next" event or first event by default so the right details pane is immediately populated
   const evs = viewportEvents();
   const upNextId = syncStatus().upNextEventId;
   const initialSelection =
@@ -124,7 +217,7 @@ export async function initializeCalendarStore() {
     setSelectedEvent(initialSelection);
   }
 
-  // Subscribe to background Rust tray / sync events
+  // Subscribe to background sync & tray events
   void api.onSyncStatus((snap) => {
     setSyncStatus(snap);
   });
@@ -134,8 +227,36 @@ export async function initializeCalendarStore() {
 }
 
 export function setViewMode(mode: CalendarViewMode) {
+  if (mode !== "settings") {
+    setLastCalendarViewMode(mode);
+  }
   setViewModeSignal(mode);
   void refreshViewport();
+}
+
+export function openSettings(tab: SettingsTab = "general") {
+  const cur = viewMode();
+  if (cur !== "settings") {
+    setLastCalendarViewMode(cur);
+  }
+  setActiveSettingsTab(tab);
+  setViewModeSignal("settings");
+}
+
+export function closeSettings() {
+  setViewModeSignal(lastCalendarViewMode());
+  void refreshViewport();
+}
+
+export function setAccountsModalOpen(open: boolean) {
+  if (open) {
+    openSettings("accounts");
+  } else {
+    setAccountsModalOpenSignal(false);
+    if (viewMode() === "settings") {
+      closeSettings();
+    }
+  }
 }
 
 export function setAnchorDate(d: Date) {
@@ -145,11 +266,14 @@ export function setAnchorDate(d: Date) {
 
 export function jumpToday() {
   setAnchorDate(new Date());
+  if (viewMode() === "settings") {
+    closeSettings();
+  }
   showToast("Jumped to Today");
 }
 
 export function stepDate(direction: -1 | 1) {
-  const mode = viewMode();
+  const mode = viewMode() === "settings" ? lastCalendarViewMode() : viewMode();
   const cur = anchorDate();
   if (mode === "day") {
     setAnchorDate(addDays(cur, direction));
@@ -164,15 +288,7 @@ export function stepDate(direction: -1 | 1) {
 
 export function toggleTheme() {
   const next = theme() === "dark" ? "light" : "dark";
-  setThemeSignal(next);
-  const root = document.documentElement;
-  if (next === "dark") {
-    root.classList.add("dark");
-    root.classList.remove("light");
-  } else {
-    root.classList.add("light");
-    root.classList.remove("dark");
-  }
+  setTheme(next);
 }
 
 export function openCommandPalette(mode: "search" | "nlp" = "nlp") {
@@ -181,12 +297,23 @@ export function openCommandPalette(mode: "search" | "nlp" = "nlp") {
 }
 
 export async function toggleCalendar(calendarId: string, isVisible: boolean) {
-  // Optimistic instant signal update
   setCalendars((prev) =>
     prev.map((c) => (c.id === calendarId ? { ...c, isVisible } : c))
   );
   await api.toggleCalendarVisibility(calendarId, isVisible);
   await refreshViewport();
+}
+
+export async function updateCalendarColorAction(
+  calendarId: string,
+  colorHex: string
+) {
+  setCalendars((prev) =>
+    prev.map((c) => (c.id === calendarId ? { ...c, colorHex } : c))
+  );
+  await api.updateCalendarColor(calendarId, colorHex);
+  await refreshViewport();
+  showToast("Updated calendar color");
 }
 
 export async function saveEventOptimistic(input: UpsertEventInput) {
@@ -197,7 +324,7 @@ export async function saveEventOptimistic(input: UpsertEventInput) {
     setSelectedEvent(match);
   }
   setDraftSlot(null);
-  showToast(`Saved "${saved.title}" (queued in outbox)`);
+  showToast(`Saved "${saved.title}"`);
   return saved;
 }
 
@@ -207,7 +334,6 @@ export async function moveOrResizeEventOptimistic(
   newEndTs: number,
   editScope: "single" | "all" = "single"
 ) {
-  // 1. Sub-millisecond optimistic UI update on the viewport signal
   setViewportEvents((prev) =>
     prev.map((item) =>
       item.instanceId === ev.instanceId
@@ -216,7 +342,6 @@ export async function moveOrResizeEventOptimistic(
     )
   );
 
-  // 2. Persist to SQLite WAL + Outbox in Rust
   await api.moveOrResizeEvent(
     ev.eventId,
     ev.startTs,
@@ -264,7 +389,13 @@ export async function updateRsvpOptimistic(
   );
   await api.updateRsvp(ev.eventId, status);
   await Promise.all([refreshViewport(), refreshMetadata()]);
-  showToast(`RSVP updated to ${status.toUpperCase()}`);
+  const label =
+    status === "accepted"
+      ? "Going"
+      : status === "tentative"
+        ? "Maybe"
+        : "Declined";
+  showToast(`Response updated: ${label}`);
 }
 
 export async function createCrossAccountBusyMirror(
@@ -278,14 +409,14 @@ export async function createCrossAccountBusyMirror(
     redactTitle
   );
   await Promise.all([refreshViewport(), refreshMetadata()]);
-  showToast(`Blocked as "${mirror.title}"`);
+  showToast(`Time blocked as "${mirror.title}"`);
 }
 
 export async function triggerSyncNowAction() {
   setSyncStatus((prev) => ({
     ...prev,
     state: "syncing",
-    lastMessage: "Syncing delta tokens & draining outbox…",
+    lastMessage: "Syncing your calendars…",
   }));
   const snap = await api.triggerSyncNow();
   setSyncStatus(snap);
@@ -298,9 +429,9 @@ export function joinActiveOrNextMeeting() {
   const url = sel?.conferenceUrl || syncStatus().upNextConferenceUrl;
   if (url) {
     void api.openExternalUrl(url);
-    showToast(`Launching meeting: ${url}`);
+    showToast("Opening video call…");
   } else {
-    showToast("No video conference link on selected or upcoming event");
+    showToast("No video link on selected or upcoming event");
   }
 }
 
@@ -309,9 +440,13 @@ export function startNewEventDraft(
   endTs?: number,
   isAllDay = false
 ) {
+  if (viewMode() === "settings") {
+    closeSettings();
+  }
+  const defaultDurSecs = userPreferences().defaultEventDurationMins * 60;
   const nowRounded = Math.floor(Date.now() / 1000 / 1800) * 1800 + 1800;
   const s = startTs ?? nowRounded;
-  const e = endTs ?? (isAllDay ? s + 86400 : s + 3600);
+  const e = endTs ?? (isAllDay ? s + 86400 : s + defaultDurSecs);
   setSelectedEvent(null);
   setDraftSlot({ startTs: s, endTs: e, isAllDay });
   setRightInspectorOpen(true);
@@ -320,18 +455,20 @@ export function startNewEventDraft(
 export {
   accounts,
   accountsModalOpen,
+  activeSettingsTab,
   anchorDate,
   calendars,
   commandPaletteInitialMode,
   commandPaletteOpen,
   draftSlot,
   inspectorEditScope,
+  lastCalendarViewMode,
   leftSidebarOpen,
   oauthConfig,
   outboxMutations,
   rightInspectorOpen,
   selectedEvent,
-  setAccountsModalOpen,
+  setActiveSettingsTab,
   setCommandPaletteOpen,
   setDraftSlot,
   setInspectorEditScope,
@@ -342,6 +479,7 @@ export {
   syncStatus,
   theme,
   toastMessage,
+  userPreferences,
   viewMode,
   viewportEvents,
 };

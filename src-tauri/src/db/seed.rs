@@ -6,13 +6,13 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
     let now = Utc::now();
     let now_iso = now.to_rfc3339();
 
-    // 1. Seed 3 Accounts: Google Workspace, Microsoft Outlook 365, and Personal Google
+    // 1. Seed 3 Accounts: Work (Google), Client/Enterprise (Outlook), and Personal (Google)
     let accounts = vec![
         Account {
             id: "acc-google-work".to_string(),
             provider: "google".to_string(),
-            email: "alex@acme.dev".to_string(),
-            display_name: "Alex Morgan (Acme Google)".to_string(),
+            email: "alex@acme.com".to_string(),
+            display_name: "Alex Morgan (Work)".to_string(),
             avatar_url: None,
             status: "demo".to_string(),
             last_synced_at: Some(now_iso.clone()),
@@ -22,7 +22,7 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
             id: "acc-ms-outlook".to_string(),
             provider: "microsoft".to_string(),
             email: "alex.morgan@contoso.com".to_string(),
-            display_name: "Alex Morgan (Contoso Outlook)".to_string(),
+            display_name: "Alex Morgan (Contoso)".to_string(),
             avatar_url: None,
             status: "demo".to_string(),
             last_synced_at: Some(now_iso.clone()),
@@ -44,13 +44,13 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
         db.upsert_account(acc)?;
     }
 
-    // 2. Seed 5 Calendars with distinct precision accent colors
+    // 2. Seed 5 Calendars with distinct accent colors
     let calendars = vec![
         Calendar {
             id: "cal-acme-eng".to_string(),
             account_id: "acc-google-work".to_string(),
-            remote_id: "alex@acme.dev".to_string(),
-            name: "Acme Engineering".to_string(),
+            remote_id: "alex@acme.com".to_string(),
+            name: "Work Schedule".to_string(),
             color_hex: "#6366f1".to_string(), // Indigo
             is_visible: true,
             is_primary: true,
@@ -61,8 +61,8 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
         Calendar {
             id: "cal-acme-launches".to_string(),
             account_id: "acc-google-work".to_string(),
-            remote_id: "launches@acme.dev".to_string(),
-            name: "Product Launches".to_string(),
+            remote_id: "launches@acme.com".to_string(),
+            name: "Product & Launches".to_string(),
             color_hex: "#ec4899".to_string(), // Pink
             is_visible: true,
             is_primary: false,
@@ -74,7 +74,7 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
             id: "cal-contoso-ent".to_string(),
             account_id: "acc-ms-outlook".to_string(),
             remote_id: "AAMkADk2-outlook-primary".to_string(),
-            name: "Contoso Enterprise".to_string(),
+            name: "Contoso Team".to_string(),
             color_hex: "#0ea5e9".to_string(), // Sky Blue
             is_visible: true,
             is_primary: true,
@@ -86,7 +86,7 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
             id: "cal-contoso-exec".to_string(),
             account_id: "acc-ms-outlook".to_string(),
             remote_id: "AAMkADk2-outlook-exec".to_string(),
-            name: "Executive Sync".to_string(),
+            name: "Leadership & Planning".to_string(),
             color_hex: "#f59e0b".to_string(), // Amber
             is_visible: true,
             is_primary: false,
@@ -98,7 +98,7 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
             id: "cal-personal".to_string(),
             account_id: "acc-google-personal".to_string(),
             remote_id: "alex.personal@gmail.com".to_string(),
-            name: "Personal & Health".to_string(),
+            name: "Personal & Wellness".to_string(),
             color_hex: "#10b981".to_string(), // Emerald
             is_visible: true,
             is_primary: true,
@@ -128,21 +128,21 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
     // Helper for sample attendees
     let team_attendees = vec![
         Attendee {
-            email: "alex@acme.dev".to_string(),
+            email: "alex@acme.com".to_string(),
             display_name: Some("Alex Morgan".to_string()),
             response_status: "accepted".to_string(),
             is_organizer: true,
             is_self: true,
         },
         Attendee {
-            email: "sarah.chen@acme.dev".to_string(),
+            email: "sarah.chen@acme.com".to_string(),
             display_name: Some("Sarah Chen".to_string()),
             response_status: "accepted".to_string(),
             is_organizer: false,
             is_self: false,
         },
         Attendee {
-            email: "marcus.vance@acme.dev".to_string(),
+            email: "marcus.vance@acme.com".to_string(),
             display_name: Some("Marcus Vance".to_string()),
             response_status: "tentative".to_string(),
             is_organizer: false,
@@ -153,7 +153,7 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
     let outlook_attendees = vec![
         Attendee {
             email: "elena.rostova@contoso.com".to_string(),
-            display_name: Some("Elena Rostova (VP Eng)".to_string()),
+            display_name: Some("Elena Rostova".to_string()),
             response_status: "accepted".to_string(),
             is_organizer: true,
             is_self: false,
@@ -186,13 +186,13 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
 
     // 3. Seed Recurring & Single Events
     let events_to_seed = vec![
-        // Recurring Daily Weekday Standup on Google Workspace (Mon-Fri 09:30 - 10:00)
+        // Recurring Daily Weekday Check-In on Google Workspace (Mon-Fri 09:30 - 10:00)
         UpsertEventInput {
             id: Some("evt-standup-series".to_string()),
             calendar_id: "cal-acme-eng".to_string(),
-            title: "Core Systems Daily Standup".to_string(),
+            title: "Daily Team Check-In".to_string(),
             description: Some(
-                "Daily 15-min velocity & blocker check across Rust engine and SolidJS UI.\nAgenda:\n• Yesterday's shipped PRs\n• Today's focus\n• Sync & RRULE edge cases"
+                "Quick morning check-in to coordinate priorities for the day.\nAgenda:\n• Highlights from yesterday\n• Today's focus\n• Open questions"
                     .to_string(),
             ),
             location: Some("Google Meet".to_string()),
@@ -209,12 +209,12 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
             edit_scope: None,
             instance_start_ts: None,
         },
-        // All-day multi-day event (Tue-Wed): Release v2.4 Code Freeze
+        // All-day multi-day event (Tue-Wed): Product Launch Week
         UpsertEventInput {
             id: Some("evt-release-freeze".to_string()),
             calendar_id: "cal-acme-launches".to_string(),
-            title: "🚀 RapidCal v2.4 Release Candidate Window".to_string(),
-            description: Some("Cross-platform desktop bundle QA for Linux, macOS, and Windows.".to_string()),
+            title: "🚀 Fall Product Launch".to_string(),
+            description: Some("Final preparation, announcements, and customer onboarding.".to_string()),
             location: Some("Global / Remote".to_string()),
             start_ts: ts(1, 0, 0),
             end_ts: ts(3, 0, 0),
@@ -229,12 +229,12 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
             edit_scope: None,
             instance_start_ts: None,
         },
-        // Monday 11:00 - 12:15: Rust SQLite WAL & FTS5 Architecture Review (Overlaps with Contoso Escalation!)
+        // Monday 11:00 - 12:15: Product Strategy & Roadmap Review
         UpsertEventInput {
             id: Some("evt-rust-arch".to_string()),
             calendar_id: "cal-acme-eng".to_string(),
-            title: "Rust SQLite WAL & Zero-Alloc Layout Deep Dive".to_string(),
-            description: Some("Reviewing O(N log N) interval column packing and FTS5 trigram benchmarks.".to_string()),
+            title: "Product Strategy & Roadmap Review".to_string(),
+            description: Some("Reviewing upcoming quarterly milestones, customer feedback, and team goals.".to_string()),
             location: Some("Google Meet • Room 4B".to_string()),
             start_ts: ts(0, 11, 0),
             end_ts: ts(0, 12, 15),
@@ -249,12 +249,12 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
             edit_scope: None,
             instance_start_ts: None,
         },
-        // Monday 11:30 - 12:30: Overlapping Microsoft Outlook Enterprise Sync (demonstrates multi-account overlap!)
+        // Monday 11:30 - 12:30: Overlapping Microsoft Outlook Client Sync
         UpsertEventInput {
             id: Some("evt-contoso-arch".to_string()),
             calendar_id: "cal-contoso-ent".to_string(),
-            title: "Contoso Microsoft Graph Delta Sync Review".to_string(),
-            description: Some("Verifying @odata.deltaLink pagination and patternedRecurrence <-> RFC 5545 RRULE translation.".to_string()),
+            title: "Client Partnership Sync — Contoso".to_string(),
+            description: Some("Aligning on project deliverables, timeline, and next steps with the Contoso team.".to_string()),
             location: Some("Microsoft Teams".to_string()),
             start_ts: ts(0, 11, 30),
             end_ts: ts(0, 12, 30),
@@ -269,12 +269,12 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
             edit_scope: None,
             instance_start_ts: None,
         },
-        // Tuesday 14:00 - 15:00: Tentative Executive Roadmap Sync (renders with diagonal tentative stripes)
+        // Tuesday 14:00 - 15:00: Tentative Leadership Planning
         UpsertEventInput {
             id: Some("evt-tentative-roadmap".to_string()),
             calendar_id: "cal-contoso-exec".to_string(),
-            title: "Q4 Enterprise Security & Keychain Audit".to_string(),
-            description: Some("Reviewing OS Keychain + AES-256-GCM fallback token storage across desktop platforms.".to_string()),
+            title: "Quarterly Budget & Operations Planning".to_string(),
+            description: Some("Reviewing department goals, resource allocation, and upcoming hiring plans.".to_string()),
             location: Some("Microsoft Teams".to_string()),
             start_ts: ts(1, 14, 0),
             end_ts: ts(1, 15, 0),
@@ -289,12 +289,12 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
             edit_scope: None,
             instance_start_ts: None,
         },
-        // Wednesday 13:00 - 14:30: Design Critique (Linear/Cron Precision UI)
+        // Wednesday 13:00 - 14:30: Design Studio Review
         UpsertEventInput {
             id: Some("evt-design-crit".to_string()),
             calendar_id: "cal-acme-launches".to_string(),
-            title: "Design Critique: Precision Grid & Keyboard UX".to_string(),
-            description: Some("Inspecting 1px hairline borders, tabular-nums time gutters, and Cmd+K NLP tokens.".to_string()),
+            title: "Brand & Design Studio Review".to_string(),
+            description: Some("Walkthrough of the updated visual identity, presentation deck, and launch campaign assets.".to_string()),
             location: Some("Zoom Video".to_string()),
             start_ts: ts(2, 13, 0),
             end_ts: ts(2, 14, 30),
@@ -309,12 +309,12 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
             edit_scope: None,
             instance_start_ts: None,
         },
-        // Wednesday 16:00 - 17:00: Personal Dentist Appointment (will be busy-mirrored onto Contoso Outlook!)
+        // Wednesday 16:00 - 17:00: Personal Dentist Appointment
         UpsertEventInput {
             id: Some("evt-personal-dentist".to_string()),
             calendar_id: "cal-personal".to_string(),
-            title: "Dr. Nguyen — Dental & Ortho Checkup".to_string(),
-            description: Some("Personal appointment — mirrored as [Busy] onto Contoso Outlook calendar.".to_string()),
+            title: "Dr. Nguyen — Dental Checkup".to_string(),
+            description: Some("Routine checkup — time also marked as Busy on the Contoso work calendar.".to_string()),
             location: Some("450 Sutter St, Suite 1200".to_string()),
             start_ts: ts(2, 16, 0),
             end_ts: ts(2, 17, 0),
@@ -329,12 +329,12 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
             edit_scope: None,
             instance_start_ts: None,
         },
-        // Friday 15:00 - 16:00: Weekly Demo & Retro
+        // Friday 15:00 - 16:00: Weekly Team Show & Tell
         UpsertEventInput {
             id: Some("evt-friday-demos".to_string()),
             calendar_id: "cal-acme-eng".to_string(),
-            title: "Friday Engineering Show & Tell".to_string(),
-            description: Some("Live demos of new RapidCal features & sub-millisecond performance telemetry.".to_string()),
+            title: "Friday Team Show & Tell".to_string(),
+            description: Some("End-of-week highlights, project demos, and team shoutouts.".to_string()),
             location: Some("Google Meet".to_string()),
             start_ts: ts(-7, 15, 0),
             end_ts: ts(-7, 16, 0),
@@ -355,11 +355,10 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
         db.upsert_event(ev_input, false)?;
     }
 
-    // Create an automatic Cross-Account Busy Mirror of the personal dentist appointment onto Contoso Outlook
+    // Create an automatic Busy Block of the personal dentist appointment onto Contoso Outlook
     let _ = db.create_busy_mirror("evt-personal-dentist", "cal-contoso-ent", false);
 
-    // Also seed a live "Up Next" event starting ~14 minutes from right now (rounded to 5m)
-    // so the TopBar "Up Next" badge, 1-click Video Join (Cmd+J), and System Tray countdown are immediately active!
+    // Seed an upcoming event starting ~15 minutes from right now
     let rounded_now = (now.timestamp() / 300) * 300;
     let up_next_start = rounded_now + 15 * 60;
     let up_next_end = up_next_start + 45 * 60;
@@ -367,9 +366,9 @@ pub fn seed_multi_account_demo(db: &Database) -> Result<(), String> {
         UpsertEventInput {
             id: Some("evt-live-up-next".to_string()),
             calendar_id: "cal-acme-eng".to_string(),
-            title: "Cross-Account Sync & PKCE Architecture Sync".to_string(),
+            title: "Weekly Design & Product Sync".to_string(),
             description: Some(
-                "Live session starting soon — press Cmd/Ctrl+J or click Join Meet to test 1-click video launch."
+                "Catching up on weekly progress and upcoming milestones."
                     .to_string(),
             ),
             location: Some("Google Meet".to_string()),
