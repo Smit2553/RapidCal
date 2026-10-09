@@ -2,6 +2,7 @@ pub mod google;
 pub mod microsoft;
 
 use crate::db::Database;
+use crate::models::OAuthConfig;
 use aes_gcm::{
     aead::{Aead, KeyInit},
     Aes256Gcm, Nonce,
@@ -221,6 +222,126 @@ pub async fn wait_for_oauth_callback(
         .map_err(|_| "Timed out waiting for OAuth callback in browser".to_string())?
 }
 
+fn read_dotenv_var(key: &str) -> Option<String> {
+    for rel in [".env", "../.env"] {
+        let Ok(contents) = std::fs::read_to_string(rel) else {
+            continue;
+        };
+        for raw_line in contents.lines() {
+            let line = raw_line.trim();
+            if line.is_empty() || line.starts_with('#') {
+                continue;
+            }
+            let line = line.strip_prefix("export ").unwrap_or(line).trim();
+            if let Some((k, v)) = line.split_once('=') {
+                if k.trim() == key {
+                    let mut val = v.trim();
+                    if (val.starts_with('"') && val.ends_with('"') && val.len() >= 2)
+                        || (val.starts_with('\'') && val.ends_with('\'') && val.len() >= 2)
+                    {
+                        val = &val[1..val.len() - 1];
+                    }
+                    let trimmed = val.trim();
+                    if !trimmed.is_empty() {
+                        return Some(trimmed.to_string());
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+fn read_builtin_env(key: &str, compile_time: Option<&'static str>) -> Option<String> {
+    if let Ok(val) = std::env::var(key) {
+        let trimmed = val.trim();
+        if !trimmed.is_empty() {
+            return Some(trimmed.to_string());
+        }
+    }
+    if let Some(val) = read_dotenv_var(key) {
+        return Some(val);
+    }
+    compile_time
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(ToOwned::to_owned)
+}
+
+/// Resolve Google OAuth `(client_id, client_secret)` using:
+/// 1. Custom developer override stored in `OAuthConfig` (if non-empty)
+/// 2. Runtime environment / `.env` / compile-time embedded `RAPIDCAL_GOOGLE_CLIENT_ID` & `RAPIDCAL_GOOGLE_CLIENT_SECRET`
+pub fn resolve_google_oauth_credentials(
+    config: &OAuthConfig,
+) -> Result<(String, Option<String>), String> {
+    let custom_id = config.google_client_id.trim();
+    if !custom_id.is_empty() {
+        let custom_secret = config
+            .google_client_secret
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .map(ToOwned::to_owned);
+        return Ok((custom_id.to_string(), custom_secret));
+    }
+
+    let builtin_id = read_builtin_env(
+        "RAPIDCAL_GOOGLE_CLIENT_ID",
+        option_env!("RAPIDCAL_GOOGLE_CLIENT_ID"),
+    )
+    .ok_or_else(|| {
+        "Google sign-in is not set up yet. Open Settings → Advanced to enter a Google Client ID."
+            .to_string()
+    })?;
+
+    let builtin_secret = read_builtin_env(
+        "RAPIDCAL_GOOGLE_CLIENT_SECRET",
+        option_env!("RAPIDCAL_GOOGLE_CLIENT_SECRET"),
+    );
+
+    Ok((builtin_id, builtin_secret))
+}
+
+/// Resolve Microsoft Entra ID `(client_id, tenant_id)` using:
+/// 1. Custom developer override stored in `OAuthConfig` (if non-empty)
+/// 2. Runtime environment / `.env` / compile-time embedded `RAPIDCAL_MS_CLIENT_ID` & `RAPIDCAL_MS_TENANT_ID`
+pub fn resolve_microsoft_oauth_credentials(
+    config: &OAuthConfig,
+) -> Result<(String, String), String> {
+    let custom_id = config.ms_client_id.trim();
+    let custom_tenant = config.ms_tenant_id.trim();
+
+    if !custom_id.is_empty() {
+        let tenant = if custom_tenant.is_empty() {
+            "common".to_string()
+        } else {
+            custom_tenant.to_string()
+        };
+        return Ok((custom_id.to_string(), tenant));
+    }
+
+    let builtin_id = read_builtin_env(
+        "RAPIDCAL_MS_CLIENT_ID",
+        option_env!("RAPIDCAL_MS_CLIENT_ID"),
+    )
+    .ok_or_else(|| {
+        "Microsoft sign-in is not set up yet. Open Settings → Advanced to enter a Microsoft Application (Client) ID."
+            .to_string()
+    })?;
+
+    let tenant = if !custom_tenant.is_empty() && custom_tenant != "common" {
+        custom_tenant.to_string()
+    } else {
+        read_builtin_env(
+            "RAPIDCAL_MS_TENANT_ID",
+            option_env!("RAPIDCAL_MS_TENANT_ID"),
+        )
+        .unwrap_or_else(|| "common".to_string())
+    };
+
+    Ok((builtin_id, tenant))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -250,5 +371,26 @@ mod tests {
             .expect("some");
         assert_eq!(loaded.access_token, token_set.access_token);
         assert_eq!(loaded.refresh_token, token_set.refresh_token);
+    }
+
+    #[test]
+    fn test_custom_oauth_override_precedence() {
+        let cfg = OAuthConfig {
+            google_client_id: "custom-google.apps.googleusercontent.com".to_string(),
+            google_client_secret: Some("GOCSPX-custom-secret".to_string()),
+            ms_client_id: "11111111-2222-3333-4444-555555555555".to_string(),
+            ms_tenant_id: "organizations".to_string(),
+            hibernation_enabled: true,
+            secondary_timezone: "UTC".to_string(),
+            sync_interval_secs: 60,
+        };
+
+        let (g_id, g_secret) = resolve_google_oauth_credentials(&cfg).expect("google custom");
+        assert_eq!(g_id, "custom-google.apps.googleusercontent.com");
+        assert_eq!(g_secret.as_deref(), Some("GOCSPX-custom-secret"));
+
+        let (ms_id, ms_tenant) = resolve_microsoft_oauth_credentials(&cfg).expect("ms custom");
+        assert_eq!(ms_id, "11111111-2222-3333-4444-555555555555");
+        assert_eq!(ms_tenant, "organizations");
     }
 }

@@ -1313,6 +1313,8 @@ export function SettingsView() {
                         onClick={() => {
                           setGoogleClientId("");
                           setGoogleClientSecret("");
+                          void persistBackendSettings();
+                          showToast("Reverted to built-in Google OAuth client");
                         }}
                         class="text-[11px] text-zinc-400 hover:text-zinc-200 underline"
                       >
@@ -1329,7 +1331,7 @@ export function SettingsView() {
                           type="text"
                           value={googleClientId()}
                           onInput={(e) => setGoogleClientId(e.currentTarget.value)}
-                          placeholder="e.g. 123456789.apps.googleusercontent.com"
+                          placeholder="Using built-in default (or enter custom .apps.googleusercontent.com)"
                           class="w-full h-8 px-2.5 rounded-md border border-zinc-800 light:border-zinc-300 bg-zinc-950 light:bg-white text-xs text-zinc-200 light:text-zinc-800 font-mono text-[11px]"
                         />
                       </div>
@@ -1357,7 +1359,7 @@ export function SettingsView() {
                       </div>
                     </div>
                     <p class="text-[10px] text-zinc-500">
-                      Requires an OAuth client ID of type <strong>Desktop app</strong> in Google Cloud Console with redirect URI <code>http://localhost:1420/oauth/callback</code>.
+                      Requires an OAuth client ID of type <strong>Desktop app</strong> in Google Cloud Console (loopback redirect <code>http://127.0.0.1</code>).
                     </p>
                   </div>
 
@@ -1375,6 +1377,8 @@ export function SettingsView() {
                         onClick={() => {
                           setMsClientId("");
                           setMsTenantId("common");
+                          void persistBackendSettings();
+                          showToast("Reverted to built-in Microsoft OAuth client");
                         }}
                         class="text-[11px] text-zinc-400 hover:text-zinc-200 underline"
                       >
@@ -1391,7 +1395,7 @@ export function SettingsView() {
                           type="text"
                           value={msClientId()}
                           onInput={(e) => setMsClientId(e.currentTarget.value)}
-                          placeholder="e.g. 00000000-0000-0000-0000-000000000000"
+                          placeholder="Using built-in default (or enter custom Application Client ID)"
                           class="w-full h-8 px-2.5 rounded-md border border-zinc-800 light:border-zinc-300 bg-zinc-950 light:bg-white text-xs text-zinc-200 light:text-zinc-800 font-mono text-[11px]"
                         />
                       </div>
@@ -1431,7 +1435,7 @@ export function SettingsView() {
                       </div>
                     </div>
                     <p class="text-[10px] text-zinc-500">
-                      Register as <strong>Mobile and desktop applications</strong> with redirect URI <code>http://localhost:1420/oauth/callback</code>.
+                      Register as <strong>Mobile and desktop applications</strong> with loopback redirect URI <code>http://127.0.0.1</code>.
                     </p>
                   </div>
 

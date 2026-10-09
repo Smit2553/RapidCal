@@ -1,6 +1,6 @@
 use crate::auth::{
-    bind_loopback_server, generate_csrf_state, generate_pkce_pair, wait_for_oauth_callback,
-    CredentialVault, OAuthTokenSet,
+    bind_loopback_server, generate_csrf_state, generate_pkce_pair,
+    resolve_google_oauth_credentials, wait_for_oauth_callback, CredentialVault, OAuthTokenSet,
 };
 use crate::db::Database;
 use crate::models::Account;
@@ -36,12 +36,7 @@ pub async fn authenticate_google_account(
     vault: &CredentialVault,
 ) -> Result<Account, String> {
     let config = db.get_oauth_config()?;
-    if config.google_client_id.trim().is_empty() {
-        return Err(
-            "Google sign-in is not set up yet. Open Settings → Accounts to enter your Google App ID."
-                .to_string(),
-        );
-    }
+    let (client_id, client_secret) = resolve_google_oauth_credentials(&config)?;
 
     let (listener, redirect_uri) = bind_loopback_server().await?;
     let (code_verifier, code_challenge) = generate_pkce_pair();
@@ -50,7 +45,7 @@ pub async fn authenticate_google_account(
     let mut auth_url = Url::parse(GOOGLE_AUTH_URL).map_err(|e| e.to_string())?;
     auth_url
         .query_pairs_mut()
-        .append_pair("client_id", config.google_client_id.trim())
+        .append_pair("client_id", &client_id)
         .append_pair("redirect_uri", &redirect_uri)
         .append_pair("response_type", "code")
         .append_pair("scope", GOOGLE_SCOPES)
@@ -66,19 +61,14 @@ pub async fn authenticate_google_account(
     let code = wait_for_oauth_callback(listener, &csrf_state, 180).await?;
 
     let mut form = vec![
-        ("client_id", config.google_client_id.trim().to_string()),
+        ("client_id", client_id),
         ("code", code),
         ("code_verifier", code_verifier),
         ("grant_type", "authorization_code".to_string()),
         ("redirect_uri", redirect_uri),
     ];
-    if let Some(secret) = config
-        .google_client_secret
-        .as_ref()
-        .map(|s| s.trim())
-        .filter(|s| !s.is_empty())
-    {
-        form.push(("client_secret", secret.to_string()));
+    if let Some(secret) = client_secret {
+        form.push(("client_secret", secret));
     }
 
     let token_res = client
@@ -157,18 +147,14 @@ pub async fn get_valid_google_access_token(
     })?;
 
     let config = db.get_oauth_config()?;
+    let (client_id, client_secret) = resolve_google_oauth_credentials(&config)?;
     let mut form = vec![
-        ("client_id", config.google_client_id.trim().to_string()),
+        ("client_id", client_id),
         ("refresh_token", refresh_token.clone()),
         ("grant_type", "refresh_token".to_string()),
     ];
-    if let Some(secret) = config
-        .google_client_secret
-        .as_ref()
-        .map(|s| s.trim())
-        .filter(|s| !s.is_empty())
-    {
-        form.push(("client_secret", secret.to_string()));
+    if let Some(secret) = client_secret {
+        form.push(("client_secret", secret));
     }
 
     let res = client

@@ -154,6 +154,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPIMAGE_EXTRACT_AND_RUN: 1
+          RAPIDCAL_GOOGLE_CLIENT_ID: ${{ secrets.RAPIDCAL_GOOGLE_CLIENT_ID }}
+          RAPIDCAL_GOOGLE_CLIENT_SECRET: ${{ secrets.RAPIDCAL_GOOGLE_CLIENT_SECRET }}
+          RAPIDCAL_MS_CLIENT_ID: ${{ secrets.RAPIDCAL_MS_CLIENT_ID }}
+          RAPIDCAL_MS_TENANT_ID: ${{ secrets.RAPIDCAL_MS_TENANT_ID }}
         with:
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag_name || 'v__VERSION__' }}
           releaseName: 'RapidCal v__VERSION__'

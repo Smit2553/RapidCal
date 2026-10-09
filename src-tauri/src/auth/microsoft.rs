@@ -1,6 +1,6 @@
 use crate::auth::{
-    bind_loopback_server, generate_csrf_state, generate_pkce_pair, wait_for_oauth_callback,
-    CredentialVault, OAuthTokenSet,
+    bind_loopback_server, generate_csrf_state, generate_pkce_pair,
+    resolve_microsoft_oauth_credentials, wait_for_oauth_callback, CredentialVault, OAuthTokenSet,
 };
 use crate::db::Database;
 use crate::models::Account;
@@ -35,18 +35,7 @@ pub async fn authenticate_microsoft_account(
     vault: &CredentialVault,
 ) -> Result<Account, String> {
     let config = db.get_oauth_config()?;
-    if config.ms_client_id.trim().is_empty() {
-        return Err(
-            "Microsoft sign-in is not set up yet. Open Settings → Accounts to enter your Microsoft App ID."
-                .to_string(),
-        );
-    }
-
-    let tenant = if config.ms_tenant_id.trim().is_empty() {
-        "common"
-    } else {
-        config.ms_tenant_id.trim()
-    };
+    let (client_id, tenant) = resolve_microsoft_oauth_credentials(&config)?;
 
     let (listener, redirect_uri) = bind_loopback_server().await?;
     let (code_verifier, code_challenge) = generate_pkce_pair();
@@ -64,7 +53,7 @@ pub async fn authenticate_microsoft_account(
     let mut auth_url = Url::parse(&authorize_endpoint).map_err(|e| e.to_string())?;
     auth_url
         .query_pairs_mut()
-        .append_pair("client_id", config.ms_client_id.trim())
+        .append_pair("client_id", &client_id)
         .append_pair("response_type", "code")
         .append_pair("redirect_uri", &redirect_uri)
         .append_pair("response_mode", "query")
@@ -83,7 +72,7 @@ pub async fn authenticate_microsoft_account(
     let code = wait_for_oauth_callback(listener, &csrf_state, 180).await?;
 
     let form = [
-        ("client_id", config.ms_client_id.trim().to_string()),
+        ("client_id", client_id),
         ("scope", MS_SCOPES.to_string()),
         ("code", code),
         ("redirect_uri", redirect_uri),
@@ -172,18 +161,14 @@ pub async fn get_valid_ms_access_token(
     })?;
 
     let config = db.get_oauth_config()?;
-    let tenant = if config.ms_tenant_id.trim().is_empty() {
-        "common"
-    } else {
-        config.ms_tenant_id.trim()
-    };
+    let (client_id, tenant) = resolve_microsoft_oauth_credentials(&config)?;
     let token_endpoint = format!(
         "https://login.microsoftonline.com/{}/oauth2/v2.0/token",
         tenant
     );
 
     let form = [
-        ("client_id", config.ms_client_id.trim().to_string()),
+        ("client_id", client_id),
         ("scope", MS_SCOPES.to_string()),
         ("refresh_token", refresh_token.clone()),
         ("grant_type", "refresh_token".to_string()),

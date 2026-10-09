@@ -175,26 +175,6 @@ impl Database {
         )
         .map_err(|e| format!("Schema initialization failed: {}", e))?;
 
-        // Load environment defaults for OAuth client IDs if present
-        let env_google_id = std::env::var("RAPIDCAL_GOOGLE_CLIENT_ID").unwrap_or_default();
-        let env_google_secret = std::env::var("RAPIDCAL_GOOGLE_CLIENT_SECRET").ok();
-        let env_ms_id = std::env::var("RAPIDCAL_MS_CLIENT_ID").unwrap_or_default();
-        let env_ms_tenant =
-            std::env::var("RAPIDCAL_MS_TENANT_ID").unwrap_or_else(|_| "common".to_string());
-
-        if !env_google_id.is_empty() {
-            let _ = conn.execute(
-                "UPDATE oauth_settings SET google_client_id = ?1, google_client_secret = COALESCE(?2, google_client_secret) WHERE id = 1 AND google_client_id = ''",
-                params![env_google_id, env_google_secret],
-            );
-        }
-        if !env_ms_id.is_empty() {
-            let _ = conn.execute(
-                "UPDATE oauth_settings SET ms_client_id = ?1, ms_tenant_id = ?2 WHERE id = 1 AND ms_client_id = ''",
-                params![env_ms_id, env_ms_tenant],
-            );
-        }
-
         Ok(())
     }
 
