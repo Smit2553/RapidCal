@@ -152,11 +152,29 @@ export function LeftSidebar() {
               </button>
             </div>
 
-            <For each={accounts()}>
-              {(account) => {
-                const accountCalendars = createMemo(() =>
-                  calendars().filter((c) => c.accountId === account.id)
-                );
+            <Show
+              when={accounts().length > 0}
+              fallback={
+                <div class="rounded-lg border border-dashed border-zinc-800 light:border-zinc-300 bg-zinc-900/20 light:bg-white p-3 text-center space-y-2">
+                  <p class="text-[11px] text-zinc-400 light:text-zinc-600 leading-relaxed">
+                    No calendars connected yet. Add Google, Outlook, or an .ICS feed to get started.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => openSettings("accounts")}
+                    class="w-full h-7 px-2.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors"
+                  >
+                    <PlusIcon class="w-3 h-3 shrink-0" />
+                    <span>Connect Calendar</span>
+                  </button>
+                </div>
+              }
+            >
+              <For each={accounts()}>
+                {(account) => {
+                  const accountCalendars = createMemo(() =>
+                    calendars().filter((c) => c.accountId === account.id)
+                  );
 
                 return (
                   <div class="rounded-lg border border-zinc-800/70 light:border-zinc-200 bg-zinc-900/40 light:bg-white p-2.5 space-y-2">
@@ -246,6 +264,7 @@ export function LeftSidebar() {
                 );
               }}
             </For>
+            </Show>
           </div>
         </div>
 

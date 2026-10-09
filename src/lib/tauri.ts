@@ -42,6 +42,7 @@ let fallbackOAuthConfig: OAuthConfig = {
 };
 
 function initFallbackSeed() {
+  if (import.meta.env.PROD) return;
   if (fallbackAccounts.length > 0) return;
   const iso = nowIso();
   fallbackAccounts = [

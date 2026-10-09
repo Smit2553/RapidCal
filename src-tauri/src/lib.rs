@@ -278,7 +278,7 @@ pub fn run() {
             let db = Database::open(&db_path)
                 .or_else(|_| Database::open_in_memory())
                 .expect("Failed to initialize RapidCal SQLite WAL database");
-            let _ = db.ensure_demo_seed();
+            let _ = db.purge_demo_accounts();
 
             let vault = CredentialVault::new(db.clone());
             let client = Client::builder()

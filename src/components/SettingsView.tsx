@@ -1000,100 +1000,127 @@ export function SettingsView() {
           {/* TAB 3: MY CALENDARS */}
           <Show when={activeSettingsTab() === "calendars"}>
             <div class="space-y-4">
-              <For each={accounts()}>
-                {(acc) => {
-                  const accCals = createMemo(() =>
-                    calendars().filter((c) => c.accountId === acc.id)
-                  );
-                  return (
-                    <section class="rounded-xl border border-zinc-800 light:border-zinc-200 bg-zinc-900/30 light:bg-zinc-50 p-4 space-y-3">
-                      <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                          <span
-                            class={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                              acc.provider === "microsoft"
-                                ? "bg-sky-500/15 text-sky-400"
+              <Show
+                when={accounts().length > 0}
+                fallback={
+                  <div class="p-8 rounded-xl border border-dashed border-zinc-800 light:border-zinc-300 bg-zinc-900/20 light:bg-zinc-50/50 text-center space-y-2.5">
+                    <div class="w-10 h-10 mx-auto rounded-full bg-zinc-800 light:bg-zinc-200 flex items-center justify-center text-zinc-400">
+                      <CalendarIcon class="w-5 h-5" />
+                    </div>
+                    <div class="text-xs font-medium text-zinc-300 light:text-zinc-700">
+                      No calendars available yet
+                    </div>
+                    <p class="text-[11px] text-zinc-500 max-w-sm mx-auto">
+                      Connect your Google Calendar, Microsoft Outlook account, or a published .ICS calendar URL to customize visibility and colors.
+                    </p>
+                    <div class="pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setActiveSettingsTab("accounts")}
+                        class="h-8 px-3.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
+                      >
+                        <PlusIcon class="w-3.5 h-3.5 shrink-0" />
+                        <span>Connect Account</span>
+                      </button>
+                    </div>
+                  </div>
+                }
+              >
+                <For each={accounts()}>
+                  {(acc) => {
+                    const accCals = createMemo(() =>
+                      calendars().filter((c) => c.accountId === acc.id)
+                    );
+                    return (
+                      <section class="rounded-xl border border-zinc-800 light:border-zinc-200 bg-zinc-900/30 light:bg-zinc-50 p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                          <div class="flex items-center gap-2">
+                            <span
+                              class={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                acc.provider === "microsoft"
+                                  ? "bg-sky-500/15 text-sky-400"
+                                  : acc.provider === "ics"
+                                    ? "bg-emerald-500/15 text-emerald-400"
+                                    : "bg-indigo-500/15 text-indigo-400"
+                              }`}
+                            >
+                              {acc.provider === "microsoft"
+                                ? "Outlook"
                                 : acc.provider === "ics"
-                                  ? "bg-emerald-500/15 text-emerald-400"
-                                  : "bg-indigo-500/15 text-indigo-400"
-                            }`}
-                          >
-                            {acc.provider === "microsoft"
-                              ? "Outlook"
-                              : acc.provider === "ics"
-                                ? "ICS Feed"
-                                : "Google"}
-                          </span>
-                          <h3 class="text-xs font-semibold text-zinc-200 light:text-zinc-800">
-                            {acc.displayName}
-                          </h3>
-                          <span class="text-xs text-zinc-500">
-                            ({acc.email})
-                          </span>
+                                  ? "ICS Feed"
+                                  : "Google"}
+                            </span>
+                            <h3 class="text-xs font-semibold text-zinc-200 light:text-zinc-800">
+                              {acc.displayName}
+                            </h3>
+                            <span class="text-xs text-zinc-500">
+                              ({acc.email})
+                            </span>
+                          </div>
                         </div>
-                      </div>
 
-                      <div class="divide-y divide-zinc-800/60 light:divide-zinc-200">
-                        <For each={accCals()}>
-                          {(cal) => (
-                            <div class="py-3 flex flex-wrap items-center justify-between gap-3">
-                              <label class="flex items-center gap-2.5 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={cal.isVisible}
-                                  onChange={(e) =>
-                                    void toggleCalendar(
-                                      cal.id,
-                                      e.currentTarget.checked
-                                    )
-                                  }
-                                  class="w-4 h-4 rounded border-zinc-700 light:border-zinc-300 accent-indigo-600 cursor-pointer"
-                                />
-                                <span
-                                  class="w-3 h-3 rounded-full shrink-0"
-                                  style={{ "background-color": cal.colorHex }}
-                                />
-                                <span class="text-xs font-medium text-zinc-100 light:text-zinc-900">
-                                  {cal.name}
-                                </span>
-                                <Show when={cal.isPrimary}>
-                                  <span class="px-1.5 py-0.5 rounded text-[10px] bg-zinc-800 light:bg-zinc-200 text-zinc-400 light:text-zinc-600">
-                                    Default
+                        <div class="divide-y divide-zinc-800/60 light:divide-zinc-200">
+                          <For each={accCals()}>
+                            {(cal) => (
+                              <div class="py-3 flex flex-wrap items-center justify-between gap-3">
+                                <label class="flex items-center gap-2.5 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={cal.isVisible}
+                                    onChange={(e) =>
+                                      void toggleCalendar(
+                                        cal.id,
+                                        e.currentTarget.checked
+                                      )
+                                    }
+                                    class="w-4 h-4 rounded border-zinc-700 light:border-zinc-300 accent-indigo-600 cursor-pointer"
+                                  />
+                                  <span
+                                    class="w-3 h-3 rounded-full shrink-0"
+                                    style={{ "background-color": cal.colorHex }}
+                                  />
+                                  <span class="text-xs font-medium text-zinc-100 light:text-zinc-900">
+                                    {cal.name}
                                   </span>
-                                </Show>
-                              </label>
+                                  <Show when={cal.isPrimary}>
+                                    <span class="px-1.5 py-0.5 rounded text-[10px] bg-zinc-800 light:bg-zinc-200 text-zinc-400 light:text-zinc-600">
+                                      Default
+                                    </span>
+                                  </Show>
+                                </label>
 
-                              <div class="flex items-center gap-1.5">
-                                <For each={CALENDAR_COLOR_SWATCHES}>
-                                  {(swatch) => (
-                                    <button
-                                      type="button"
-                                      title={swatch.name}
-                                      onClick={() =>
-                                        void updateCalendarColorAction(
-                                          cal.id,
-                                          swatch.hex
-                                        )
-                                      }
-                                      class={`w-5 h-5 rounded-full transition-transform ${
-                                        cal.colorHex.toLowerCase() ===
-                                        swatch.hex.toLowerCase()
-                                          ? "scale-110 ring-2 ring-white light:ring-zinc-900"
-                                          : "opacity-75 hover:opacity-100"
-                                      }`}
-                                      style={{ "background-color": swatch.hex }}
-                                    />
-                                  )}
-                                </For>
+                                <div class="flex items-center gap-1.5">
+                                  <For each={CALENDAR_COLOR_SWATCHES}>
+                                    {(swatch) => (
+                                      <button
+                                        type="button"
+                                        title={swatch.name}
+                                        onClick={() =>
+                                          void updateCalendarColorAction(
+                                            cal.id,
+                                            swatch.hex
+                                          )
+                                        }
+                                        class={`w-5 h-5 rounded-full transition-transform ${
+                                          cal.colorHex.toLowerCase() ===
+                                          swatch.hex.toLowerCase()
+                                            ? "scale-110 ring-2 ring-white light:ring-zinc-900"
+                                            : "opacity-75 hover:opacity-100"
+                                        }`}
+                                        style={{ "background-color": swatch.hex }}
+                                      />
+                                    )}
+                                  </For>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                        </For>
-                      </div>
-                    </section>
-                  );
-                }}
-              </For>
+                            )}
+                          </For>
+                        </div>
+                      </section>
+                    );
+                  }}
+                </For>
+              </Show>
             </div>
           </Show>
 
@@ -1203,20 +1230,6 @@ export function SettingsView() {
                       class="h-8 px-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors"
                     >
                       Sync Now
-                    </button>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        await api.resetDemoData();
-                        await Promise.all([
-                          refreshMetadata(),
-                          refreshViewport(),
-                        ]);
-                        showToast("Restored sample events");
-                      }}
-                      class="h-8 px-3 rounded-lg border border-zinc-700 light:border-zinc-300 hover:bg-zinc-800 light:hover:bg-zinc-200 text-xs text-zinc-300 light:text-zinc-700 transition-colors"
-                    >
-                      Restore Sample Events
                     </button>
                   </div>
                 </div>

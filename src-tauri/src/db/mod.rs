@@ -219,6 +219,22 @@ impl Database {
         seed::seed_multi_account_demo(self)
     }
 
+    pub fn purge_demo_accounts(&self) -> Result<(), String> {
+        let conn = self.conn.lock().map_err(|e| e.to_string())?;
+        conn.execute_batch(
+            "
+            DELETE FROM outbox_mutations WHERE account_id IN (SELECT id FROM accounts WHERE status = 'demo');
+            DELETE FROM events_fts WHERE calendar_id IN (SELECT id FROM calendars WHERE account_id IN (SELECT id FROM accounts WHERE status = 'demo'));
+            DELETE FROM event_instances WHERE calendar_id IN (SELECT id FROM calendars WHERE account_id IN (SELECT id FROM accounts WHERE status = 'demo'));
+            DELETE FROM events_master WHERE calendar_id IN (SELECT id FROM calendars WHERE account_id IN (SELECT id FROM accounts WHERE status = 'demo'));
+            DELETE FROM calendars WHERE account_id IN (SELECT id FROM accounts WHERE status = 'demo');
+            DELETE FROM accounts WHERE status = 'demo';
+            ",
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
     pub fn list_accounts(&self) -> Result<Vec<Account>, String> {
         let conn = self.conn.lock().map_err(|e| e.to_string())?;
         let mut stmt = conn

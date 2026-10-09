@@ -395,6 +395,11 @@ export async function updateCalendarColorAction(
 }
 
 export async function saveEventOptimistic(input: UpsertEventInput) {
+  if (!input.calendarId) {
+    showToast("Connect a calendar account first to create events");
+    openSettings("accounts");
+    return null;
+  }
   const saved = await api.upsertEvent(input);
   await Promise.all([refreshViewport(), refreshMetadata()]);
   const match = viewportEvents().find((e) => e.eventId === saved.id) || null;
