@@ -663,6 +663,17 @@ export const api = {
     );
   },
 
+  async connectIcsAccount(url: string, name?: string): Promise<Account> {
+    if (isTauriRuntime())
+      return invoke<Account>("connect_ics_account", {
+        url,
+        name: name?.trim() ? name.trim() : null,
+      });
+    throw new Error(
+      "Subscribing to a live .ics calendar feed requires running the RapidCal desktop app."
+    );
+  },
+
   async listCalendars(): Promise<Calendar[]> {
     if (isTauriRuntime()) return invoke<Calendar[]>("list_calendars");
     initFallbackSeed();

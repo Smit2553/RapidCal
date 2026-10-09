@@ -166,18 +166,24 @@ export function LeftSidebar() {
                           class={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
                             account.provider === "microsoft"
                               ? "bg-sky-500/15 text-sky-400 border border-sky-500/30"
-                              : "bg-indigo-500/15 text-indigo-400 border border-indigo-500/30"
+                              : account.provider === "ics"
+                                ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                                : "bg-indigo-500/15 text-indigo-400 border border-indigo-500/30"
                           }`}
                         >
                           {account.provider === "microsoft"
                             ? "Outlook"
-                            : "Google"}
+                            : account.provider === "ics"
+                              ? "ICS"
+                              : "Google"}
                         </span>
                         <span
                           class="text-xs font-medium text-zinc-200 light:text-zinc-800 truncate"
                           title={account.email}
                         >
-                          {account.email}
+                          {account.provider === "ics"
+                            ? account.displayName || account.email
+                            : account.email}
                         </span>
                       </div>
                       <span

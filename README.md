@@ -17,14 +17,30 @@
 - **Multi-Account OAuth2 + PKCE Loopback Vault**:
   - Direct localhost loopback OAuth2 + PKCE (`S256`) flow in Rust (`127.0.0.1:0`) with zero external cloud relay.
   - Native OS Keychain token storage (`keyring`) with automatic AES-256-GCM encrypted SQLite fallback (`encrypted_credentials`).
-- **Google Calendar v3 & Microsoft Graph Delta Sync**:
-  - Incremental `nextSyncToken` (Google) and `@odata.deltaLink` (Microsoft Graph) synchronization.
-  - Bi-directional translator between Microsoft Graph `patternedRecurrence` and RFC 5545 `RRULE` strings.
+- **Google Calendar v3, Microsoft Graph Delta Sync & `.ics` Feed Subscriptions**:
+  - Incremental `nextSyncToken` (Google) and `@odata.deltaLink` (Microsoft Graph) synchronization, plus read-only `.ics` / `webcal://` calendar feed polling.
+  - Bi-directional translator between Microsoft Graph `patternedRecurrence` and RFC 5545 `RRULE` strings, plus Windows-to-IANA timezone translation for published Outlook `.ics` feeds.
   - Local Rust `rrule` expansion with rolling materialized window (`event_instances`) + on-the-fly expansion for distant years.
 - **Multi-Account Meeting Suite**:
   - 1-click Video Conference Join (`Cmd/Ctrl+J`) for Google Meet, Microsoft Teams, Zoom, and Webex.
   - Inline & Inspector Attendee RSVP (`Yes` / `Maybe` / `No`).
   - **Cross-Account Busy Blocking**: Mirror personal events as `[Busy]` onto work calendars across Google <-> Outlook with automatic time-change propagation.
+
+---
+
+## Enterprise & University Microsoft Outlook Disclosure
+
+> [!IMPORTANT]
+> **Known Limitation — Enterprise / University Microsoft 365 OAuth Tenants:**
+> While personal Microsoft accounts (`@outlook.com`, `@hotmail.com`, `@live.com`) and open Microsoft 365 tenants work with full two-way OAuth2 sync, many corporate and university Microsoft Entra ID (Azure AD) tenants block unverified third-party OAuth applications from requesting `Calendars.ReadWrite` without IT administrator tenant-wide consent or a Microsoft Partner Network verified business entity.
+>
+> **Resolving enterprise Microsoft OAuth publisher verification is not on the roadmap at this point.**
+>
+> **Supported Workaround (Read-Only `.ics` Subscription):**
+> If your organization blocks Microsoft OAuth sign-in, you can connect your Outlook schedule in **Settings → Connected Accounts → Subscribe via `.ICS` / WebCal Feed (Read-Only)**:
+> 1. Open [Outlook on the Web](https://outlook.office.com) → **Settings (Gear Icon)** → **Calendar** → **Shared calendars**.
+> 2. Under **Publish a calendar**, select your calendar, choose **Can view all details**, and click **Publish**.
+> 3. Copy the generated **ICS** link and paste it into RapidCal. RapidCal will automatically sync your events, recurring series, timezones, and Microsoft Teams / Zoom join links (`Cmd/Ctrl+J`) on a read-only basis.
 
 ---
 

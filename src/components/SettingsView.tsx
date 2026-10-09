@@ -205,6 +205,9 @@ export function SettingsView() {
   const [syncIntervalSecs, setSyncIntervalSecs] = createSignal(60);
   const [authStatusMsg, setAuthStatusMsg] = createSignal<string | null>(null);
   const [showClientSecret, setShowClientSecret] = createSignal(false);
+  const [icsFeedUrl, setIcsFeedUrl] = createSignal("");
+  const [icsFeedName, setIcsFeedName] = createSignal("");
+  const [isConnectingIcs, setIsConnectingIcs] = createSignal(false);
 
   // Diagnostics & Modals state
   const [selectedPayload, setSelectedPayload] = createSignal<string | null>(null);
@@ -365,6 +368,32 @@ export function SettingsView() {
       showToast(`Connected ${acc.email}`);
     } catch (err) {
       setAuthStatusMsg(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const handleConnectIcsFeed = async (e: Event) => {
+    e.preventDefault();
+    const url = icsFeedUrl().trim();
+    if (!url) {
+      setAuthStatusMsg("Please enter a valid .ics or webcal:// calendar URL.");
+      return;
+    }
+    setIsConnectingIcs(true);
+    setAuthStatusMsg("Fetching and parsing .ics calendar feed…");
+    try {
+      const acc = await api.connectIcsAccount(
+        url,
+        icsFeedName().trim() || undefined
+      );
+      await Promise.all([refreshMetadata(), refreshViewport()]);
+      setIcsFeedUrl("");
+      setIcsFeedName("");
+      setAuthStatusMsg(`Subscribed to ${acc.displayName}!`);
+      showToast(`Subscribed to ${acc.displayName}`);
+    } catch (err) {
+      setAuthStatusMsg(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsConnectingIcs(false);
     }
   };
 
@@ -832,10 +861,16 @@ export function SettingsView() {
                                 class={`px-2 py-0.5 rounded text-[10px] font-semibold ${
                                   acc.provider === "microsoft"
                                     ? "bg-sky-500/15 text-sky-400"
-                                    : "bg-indigo-500/15 text-indigo-400"
+                                    : acc.provider === "ics"
+                                      ? "bg-emerald-500/15 text-emerald-400"
+                                      : "bg-indigo-500/15 text-indigo-400"
                                 }`}
                               >
-                                {acc.provider === "microsoft" ? "Outlook" : "Google"}
+                                {acc.provider === "microsoft"
+                                  ? "Outlook"
+                                  : acc.provider === "ics"
+                                    ? "ICS Feed (Read-Only)"
+                                    : "Google"}
                               </span>
                               <span class="text-[11px] text-emerald-400 flex items-center gap-1">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -845,7 +880,10 @@ export function SettingsView() {
                             <div class="text-xs font-semibold text-zinc-100 light:text-zinc-900 truncate">
                               {acc.displayName || acc.email}
                             </div>
-                            <div class="text-[11px] text-zinc-400 truncate">
+                            <div
+                              class="text-[11px] text-zinc-400 truncate font-mono-tabular"
+                              title={acc.email}
+                            >
                               {acc.email}
                             </div>
                           </div>
@@ -859,7 +897,7 @@ export function SettingsView() {
                               onClick={async () => {
                                 await api.removeAccount(acc.id);
                                 await Promise.all([refreshMetadata(), refreshViewport()]);
-                                showToast(`Disconnected ${acc.email}`);
+                                showToast(`Disconnected ${acc.displayName || acc.email}`);
                               }}
                               class="text-xs text-rose-400 hover:text-rose-300 font-medium transition-colors"
                             >
@@ -871,6 +909,63 @@ export function SettingsView() {
                     </For>
                   </div>
                 </Show>
+              </section>
+
+              {/* ICS / WebCal Feed Subscription Card (Enterprise / University Outlook Workaround) */}
+              <section class="rounded-xl border border-zinc-800 light:border-zinc-200 bg-zinc-900/30 light:bg-zinc-50 p-4 sm:p-5 space-y-3.5">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-300 light:text-zinc-700">
+                      Subscribe via .ICS / WebCal Feed (Read-Only)
+                    </h3>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      Enterprise / University Outlook Compatible
+                    </span>
+                  </div>
+                  <p class="text-xs text-zinc-500">
+                    Some locked-down enterprise or university Microsoft 365 tenants block third-party OAuth apps. You can connect those schedules via a published <code>.ics</code> link (<strong class="text-zinc-300 light:text-zinc-700">Outlook Web → Settings → Calendar → Shared calendars → Publish a calendar → Can view all details → Copy ICS link</strong>).
+                  </p>
+                </div>
+
+                <form
+                  onSubmit={(e) => void handleConnectIcsFeed(e)}
+                  class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end"
+                >
+                  <div class="sm:col-span-4 space-y-1">
+                    <label class="text-[11px] font-medium text-zinc-400 light:text-zinc-600">
+                      Calendar Label (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={icsFeedName()}
+                      onInput={(e) => setIcsFeedName(e.currentTarget.value)}
+                      placeholder="e.g. ASU Outlook / Work Schedule"
+                      class="w-full h-8 px-2.5 rounded-lg border border-zinc-800 light:border-zinc-300 bg-zinc-950 light:bg-white text-xs text-zinc-200 light:text-zinc-800"
+                    />
+                  </div>
+                  <div class="sm:col-span-6 space-y-1">
+                    <label class="text-[11px] font-medium text-zinc-400 light:text-zinc-600">
+                      Published .ICS or webcal:// URL
+                    </label>
+                    <input
+                      type="text"
+                      value={icsFeedUrl()}
+                      onInput={(e) => setIcsFeedUrl(e.currentTarget.value)}
+                      placeholder="https://outlook.office365.com/owa/calendar/.../reachcalendar.ics"
+                      class="w-full h-8 px-2.5 rounded-lg border border-zinc-800 light:border-zinc-300 bg-zinc-950 light:bg-white text-xs font-mono-tabular text-zinc-200 light:text-zinc-800"
+                    />
+                  </div>
+                  <div class="sm:col-span-2">
+                    <button
+                      type="submit"
+                      disabled={isConnectingIcs()}
+                      class="w-full h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                    >
+                      <PlusIcon class="w-3.5 h-3.5 shrink-0" />
+                      <span>{isConnectingIcs() ? "Adding…" : "Add ICS"}</span>
+                    </button>
+                  </div>
+                </form>
               </section>
 
               {/* Discreet Enterprise & Power-User Referral Card */}
@@ -918,12 +1013,16 @@ export function SettingsView() {
                             class={`px-2 py-0.5 rounded text-[10px] font-semibold ${
                               acc.provider === "microsoft"
                                 ? "bg-sky-500/15 text-sky-400"
-                                : "bg-indigo-500/15 text-indigo-400"
+                                : acc.provider === "ics"
+                                  ? "bg-emerald-500/15 text-emerald-400"
+                                  : "bg-indigo-500/15 text-indigo-400"
                             }`}
                           >
                             {acc.provider === "microsoft"
                               ? "Outlook"
-                              : "Google"}
+                              : acc.provider === "ics"
+                                ? "ICS Feed"
+                                : "Google"}
                           </span>
                           <h3 class="text-xs font-semibold text-zinc-200 light:text-zinc-800">
                             {acc.displayName}

@@ -338,8 +338,27 @@
                     365 accounts.
                   </td>
                 </tr>
+                <tr>
+                  <td>
+                    <strong>Read-Only <code>.ics</code> / WebCal Feeds</strong><br />
+                    <code>https://</code> or <code>webcal://</code> URL
+                  </td>
+                  <td>Published iCalendar (<code>.ics</code>) event stream (read-only).</td>
+                  <td>
+                    Allows users on restricted enterprise or university Microsoft 365 tenants (or any WebCal provider)
+                    to view their schedule, search events, and join video meetings (<code>Cmd/Ctrl+J</code>) without
+                    OAuth admin consent.
+                  </td>
+                </tr>
               </tbody>
             </table>
+          </div>
+
+          <div class="callout-box" style="margin-top: 1.25rem; border-color: rgba(245, 158, 11, 0.35); background: rgba(245, 158, 11, 0.06);">
+            <div class="callout-title" style="color: #fbbf24;">Enterprise &amp; University Microsoft Outlook Accounts — Disclosure</div>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+              While personal Microsoft accounts (<code>@outlook.com</code>, <code>@hotmail.com</code>, <code>@live.com</code>) and standard Microsoft 365 tenants support full two-way OAuth sync, some locked-down enterprise and university Microsoft Entra ID tenants block unverified third-party OAuth apps from requesting <code>Calendars.ReadWrite</code> without IT administrator consent. <strong>Resolving enterprise Microsoft OAuth publisher verification is not on the roadmap at this point.</strong> If your organization blocks OAuth sign-in, you can connect your Outlook schedule in RapidCal via a read-only <code>.ics</code> feed (<em>Outlook Web → Settings → Calendar → Shared calendars → Publish a calendar → Copy ICS link</em>).
+            </p>
           </div>
 
           <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.25rem;">

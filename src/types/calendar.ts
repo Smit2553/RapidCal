@@ -50,7 +50,7 @@ export interface UserPreferences {
 
 export interface Account {
   id: string;
-  provider: "google" | "microsoft" | "local" | string;
+  provider: "google" | "microsoft" | "ics" | "local" | string;
   email: string;
   displayName: string;
   avatarUrl: string | null;

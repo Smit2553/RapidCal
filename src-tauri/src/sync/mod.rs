@@ -1,4 +1,5 @@
 pub mod google;
+pub mod ics;
 pub mod microsoft;
 
 use crate::auth::CredentialVault;
@@ -235,11 +236,20 @@ impl SyncOrchestrator {
             }
         }
 
-        // 2. Run incremental syncToken / deltaLink pull for connected accounts
+        // 2. Run incremental syncToken / deltaLink / ICS feed pull for connected accounts
         let mut synced_accounts = 0usize;
         for mut acc in accounts {
             let has_token = self.vault.load_tokens(&acc.id).ok().flatten().is_some();
-            if acc.status == "connected" && has_token {
+            if acc.status == "connected" && acc.provider == "ics" {
+                if ics::sync_ics_account(&self.client, &self.db, &acc)
+                    .await
+                    .is_ok()
+                {
+                    acc.last_synced_at = Some(Utc::now().to_rfc3339());
+                    let _ = self.db.upsert_account(&acc);
+                    synced_accounts += 1;
+                }
+            } else if acc.status == "connected" && has_token {
                 let res = match acc.provider.as_str() {
                     "google" => {
                         google::sync_google_account(&self.client, &self.db, &self.vault, &acc).await

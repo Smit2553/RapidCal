@@ -427,6 +427,30 @@ impl Database {
         })
     }
 
+    pub fn list_event_ids_for_calendar(&self, calendar_id: &str) -> Result<Vec<String>, String> {
+        let conn = self.conn.lock().map_err(|e| e.to_string())?;
+        let mut stmt = conn
+            .prepare("SELECT id FROM events_master WHERE calendar_id = ?1")
+            .map_err(|e| e.to_string())?;
+        let rows = stmt
+            .query_map(params![calendar_id], |r| r.get(0))
+            .map_err(|e| e.to_string())?;
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(|e| e.to_string())
+    }
+
+    pub fn set_event_exdates(&self, event_id: &str, exdates: &[i64]) -> Result<(), String> {
+        let mut conn = self.conn.lock().map_err(|e| e.to_string())?;
+        let tx = conn.transaction().map_err(|e| e.to_string())?;
+        if let Some(mut ev) = Self::get_event_locked(&tx, event_id)? {
+            ev.exdates = exdates.to_vec();
+            Self::save_event_master_tx(&tx, &ev)?;
+            Self::rematerialize_event_instances_tx(&tx, &ev)?;
+        }
+        tx.commit().map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
     /// Insert or update an event (handling single-instance override on recurring series when `edit_scope == "single"`),
     /// rematerialize its instances in `event_instances`, index in `events_fts`, update linked busy mirrors,
     /// and optionally queue an outbox mutation.

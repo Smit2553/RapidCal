@@ -57,6 +57,17 @@ async fn connect_oauth_account(
 }
 
 #[tauri::command]
+async fn connect_ics_account(
+    state: State<'_, AppState>,
+    url: String,
+    name: Option<String>,
+) -> Result<Account, String> {
+    let acc = sync::ics::connect_ics_account(&state.client, &state.db, &url, name).await?;
+    state.sync_orchestrator.refresh_up_next();
+    Ok(acc)
+}
+
+#[tauri::command]
 fn list_calendars(state: State<'_, AppState>) -> Result<Vec<Calendar>, String> {
     state.db.list_calendars()
 }
@@ -298,6 +309,7 @@ pub fn run() {
             list_accounts,
             remove_account,
             connect_oauth_account,
+            connect_ics_account,
             list_calendars,
             toggle_calendar_visibility,
             update_calendar_color,
