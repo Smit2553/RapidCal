@@ -7,7 +7,9 @@ import type {
   NlpParseResult,
   OAuthConfig,
   OutboxMutation,
+  ReleaseAsset,
   SyncStatusSnapshot,
+  UpdateCheckResult,
   UpsertEventInput,
   ViewportEvent,
 } from "../types/calendar";
@@ -1494,6 +1496,89 @@ export const api = {
     fallbackAccounts = [];
     fallbackOutbox = [];
     initFallbackSeed();
+  },
+
+  async checkForUpdates(): Promise<UpdateCheckResult> {
+    if (isTauriRuntime())
+      return invoke<UpdateCheckResult>("check_for_updates");
+
+    const currentVersion = "0.1.0";
+    try {
+      const resp = await fetch(
+        "https://api.github.com/repos/Smit2553/RapidCal/releases/latest",
+        {
+          headers: {
+            Accept: "application/vnd.github+json",
+          },
+        }
+      );
+      if (resp.ok) {
+        const data = await resp.json();
+        const latestVersion = String(data.tag_name || currentVersion).replace(
+          /^[vV]/,
+          ""
+        );
+        const curParts = currentVersion.split(".").map((n) => parseInt(n, 10) || 0);
+        const latParts = latestVersion
+          .split("-")[0]
+          .split(".")
+          .map((n) => parseInt(n, 10) || 0);
+        let updateAvailable = false;
+        for (let i = 0; i < 3; i++) {
+          if ((latParts[i] || 0) > (curParts[i] || 0)) {
+            updateAvailable = true;
+            break;
+          }
+          if ((latParts[i] || 0) < (curParts[i] || 0)) {
+            break;
+          }
+        }
+        const assets: ReleaseAsset[] = Array.isArray(data.assets)
+          ? data.assets
+              .filter(
+                (a: any) =>
+                  typeof a?.name === "string" &&
+                  !a.name.toLowerCase().endsWith(".sig")
+              )
+              .map((a: any) => ({
+                name: String(a.name),
+                downloadUrl: String(a.browser_download_url || ""),
+                sizeBytes: Number(a.size || 0),
+              }))
+          : [];
+        return {
+          currentVersion,
+          latestVersion,
+          updateAvailable,
+          releaseName: String(data.name || `RapidCal v${latestVersion}`),
+          releaseNotes: String(
+            data.body || "No release notes provided for this version."
+          ),
+          releaseUrl: String(
+            data.html_url || "https://github.com/Smit2553/RapidCal/releases"
+          ),
+          publishedAt: data.published_at ? String(data.published_at) : null,
+          checkedAt: nowIso(),
+          recommendedAsset: assets[0] || null,
+          assets,
+        };
+      }
+    } catch {
+      // Fallback when offline or rate-limited in browser preview
+    }
+
+    return {
+      currentVersion,
+      latestVersion: currentVersion,
+      updateAvailable: false,
+      releaseName: `RapidCal v${currentVersion}`,
+      releaseNotes: "You are running the latest version of RapidCal.",
+      releaseUrl: "https://github.com/Smit2553/RapidCal/releases",
+      publishedAt: null,
+      checkedAt: nowIso(),
+      recommendedAsset: null,
+      assets: [],
+    };
   },
 
   async onSyncStatus(

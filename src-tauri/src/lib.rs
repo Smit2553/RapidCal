@@ -6,12 +6,13 @@ pub mod nlp;
 pub mod rrule_engine;
 pub mod sync;
 pub mod tray;
+pub mod updater;
 
 use crate::auth::CredentialVault;
 use crate::db::Database;
 use crate::models::{
     Account, Calendar, EventMaster, NlpParseResult, OAuthConfig, OutboxMutation,
-    SyncStatusSnapshot, UpsertEventInput, ViewportEvent,
+    SyncStatusSnapshot, UpdateCheckResult, UpsertEventInput, ViewportEvent,
 };
 use crate::sync::{SyncOrchestrator, SyncTrigger};
 use chrono::Utc;
@@ -264,6 +265,11 @@ fn reset_demo_data(state: State<'_, AppState>) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+async fn check_for_updates(state: State<'_, AppState>) -> Result<UpdateCheckResult, String> {
+    updater::check_github_releases(&state.client).await
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -282,7 +288,11 @@ pub fn run() {
 
             let vault = CredentialVault::new(db.clone());
             let client = Client::builder()
-                .user_agent("RapidCal/0.1.0 (Tauri v2; Rust)")
+                .user_agent(concat!(
+                    "RapidCal/",
+                    env!("CARGO_PKG_VERSION"),
+                    " (Tauri v2; Rust)"
+                ))
                 .timeout(std::time::Duration::from_secs(20))
                 .build()
                 .expect("Failed to build HTTPS client");
@@ -329,6 +339,7 @@ pub fn run() {
             save_oauth_config,
             open_external_url,
             reset_demo_data,
+            check_for_updates,
         ])
         .run(tauri::generate_context!())
         .expect("error while running RapidCal tauri application");

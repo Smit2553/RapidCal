@@ -15,6 +15,7 @@ import type {
   OutboxMutation,
   SettingsTab,
   SyncStatusSnapshot,
+  UpdateCheckResult,
   UpsertEventInput,
   UserPreferences,
   ViewportEvent,
@@ -60,6 +61,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   platformShortcutStyle: "auto",
   gridDensity: "standard",
   hourHeight: DEFAULT_HOUR_HEIGHT,
+  checkForUpdatesOnStartup: true,
 };
 
 function loadInitialPreferences(): UserPreferences {
@@ -162,12 +164,48 @@ const [outboxMutations, setOutboxMutations] = createSignal<OutboxMutation[]>(
   []
 );
 const [toastMessage, setToastMessage] = createSignal<string | null>(null);
+const [updateCheckResult, setUpdateCheckResult] =
+  createSignal<UpdateCheckResult | null>(null);
+const [isCheckingForUpdates, setIsCheckingForUpdates] =
+  createSignal<boolean>(false);
+const [updateCheckError, setUpdateCheckError] = createSignal<string | null>(
+  null
+);
 
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
 export function showToast(msg: string) {
   setToastMessage(msg);
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(() => setToastMessage(null), 3200);
+}
+
+export async function checkForUpdatesAction(options?: {
+  silent?: boolean;
+}): Promise<UpdateCheckResult | null> {
+  if (isCheckingForUpdates()) return updateCheckResult();
+  setIsCheckingForUpdates(true);
+  setUpdateCheckError(null);
+  try {
+    const res = await api.checkForUpdates();
+    setUpdateCheckResult(res);
+    if (res.updateAvailable) {
+      showToast(
+        `Update available: RapidCal v${res.latestVersion} — view in Settings`
+      );
+    } else if (!options?.silent) {
+      showToast(`RapidCal is up to date (v${res.currentVersion})`);
+    }
+    return res;
+  } catch (err: any) {
+    const msg = err instanceof Error ? err.message : String(err);
+    setUpdateCheckError(msg);
+    if (!options?.silent) {
+      showToast(`Update check failed: ${msg}`);
+    }
+    return null;
+  } finally {
+    setIsCheckingForUpdates(false);
+  }
 }
 
 export function applyThemeToDom(next: "dark" | "light") {
@@ -302,6 +340,10 @@ export async function initializeCalendarStore() {
   void api.onOpenCommandPalette(() => {
     openCommandPalette("nlp");
   });
+
+  if (userPreferences().checkForUpdatesOnStartup !== false) {
+    void checkForUpdatesAction({ silent: true });
+  }
 }
 
 export function setViewMode(mode: CalendarViewMode) {
@@ -545,6 +587,7 @@ export {
   commandPaletteOpen,
   draftSlot,
   inspectorEditScope,
+  isCheckingForUpdates,
   lastCalendarViewMode,
   leftSidebarOpen,
   oauthConfig,
@@ -562,6 +605,8 @@ export {
   syncStatus,
   theme,
   toastMessage,
+  updateCheckError,
+  updateCheckResult,
   userPreferences,
   viewMode,
   viewportEvents,

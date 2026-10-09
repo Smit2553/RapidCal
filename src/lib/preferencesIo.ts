@@ -220,6 +220,11 @@ export function validatePreferencesImport(rawJson: string): ValidationResult {
     nextPrefs.hourHeight = hh;
   }
 
+  // 9. checkForUpdatesOnStartup
+  if ("checkForUpdatesOnStartup" in p) {
+    nextPrefs.checkForUpdatesOnStartup = Boolean(p.checkForUpdatesOnStartup);
+  }
+
   // Theme check
   let nextTheme: ("dark" | "light") | undefined;
   if (parsed.theme === "dark" || parsed.theme === "light") {

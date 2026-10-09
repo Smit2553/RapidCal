@@ -45,6 +45,7 @@ export interface UserPreferences {
   platformShortcutStyle?: PlatformShortcutStyle;
   gridDensity?: GridDensity;
   hourHeight?: number;
+  checkForUpdatesOnStartup?: boolean;
 }
 
 
@@ -209,3 +210,23 @@ export interface NlpParseResult {
   attendees: string[];
   confidence: number;
 }
+
+export interface ReleaseAsset {
+  name: string;
+  downloadUrl: string;
+  sizeBytes: number;
+}
+
+export interface UpdateCheckResult {
+  currentVersion: string;
+  latestVersion: string;
+  updateAvailable: boolean;
+  releaseName: string;
+  releaseNotes: string;
+  releaseUrl: string;
+  publishedAt: string | null;
+  checkedAt: string;
+  recommendedAsset: ReleaseAsset | null;
+  assets: ReleaseAsset[];
+}
+

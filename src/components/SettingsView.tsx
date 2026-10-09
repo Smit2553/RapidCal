@@ -36,9 +36,11 @@ import {
   accounts,
   activeSettingsTab,
   calendars,
+  checkForUpdatesAction,
   closeSettings,
   DEFAULT_HOUR_HEIGHT,
   hourHeightPx,
+  isCheckingForUpdates,
   oauthConfig,
   outboxMutations,
   refreshMetadata,
@@ -55,6 +57,8 @@ import {
   toggleCalendar,
   triggerSyncNowAction,
   updateCalendarColorAction,
+  updateCheckError,
+  updateCheckResult,
   updateUserPreferences,
   userPreferences,
 } from "../store/calendarStore";
@@ -468,7 +472,36 @@ export function SettingsView() {
           </nav>
         </div>
 
-        <div class="pt-4 border-t border-zinc-800/80 light:border-zinc-200">
+        <div class="pt-4 border-t border-zinc-800/80 light:border-zinc-200 space-y-2.5">
+          <div class="px-1 flex items-center justify-between text-[11px]">
+            <span class="text-zinc-500 font-mono">
+              RapidCal v{updateCheckResult()?.currentVersion || "0.1.0"}
+            </span>
+            <Show
+              when={updateCheckResult()?.updateAvailable}
+              fallback={
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveSettingsTab("general");
+                    void checkForUpdatesAction();
+                  }}
+                  disabled={isCheckingForUpdates()}
+                  class="text-zinc-400 hover:text-indigo-400 transition-colors"
+                >
+                  {isCheckingForUpdates() ? "Checking…" : "Check updates"}
+                </button>
+              }
+            >
+              <button
+                type="button"
+                onClick={() => setActiveSettingsTab("general")}
+                class="px-1.5 py-0.5 rounded bg-indigo-500/15 border border-indigo-500/40 text-indigo-300 light:text-indigo-700 font-semibold text-[10px]"
+              >
+                v{updateCheckResult()?.latestVersion} available
+              </button>
+            </Show>
+          </div>
           <button
             type="button"
             onClick={closeSettings}
@@ -783,6 +816,244 @@ export function SettingsView() {
                       </button>
                     </div>
                   </div>
+                </div>
+              </section>
+
+              {/* Software Updates & Version Card */}
+              <section class="rounded-xl border border-zinc-800 light:border-zinc-200 bg-zinc-900/30 light:bg-zinc-50 p-4 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-300 light:text-zinc-700">
+                        Software Updates
+                      </h3>
+                      <Show when={isCheckingForUpdates()}>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
+                          Checking…
+                        </span>
+                      </Show>
+                      <Show
+                        when={
+                          !isCheckingForUpdates() &&
+                          updateCheckResult()?.updateAvailable
+                        }
+                      >
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                          Update Available: v{updateCheckResult()?.latestVersion}
+                        </span>
+                      </Show>
+                      <Show
+                        when={
+                          !isCheckingForUpdates() &&
+                          updateCheckResult() &&
+                          !updateCheckResult()?.updateAvailable &&
+                          !updateCheckError()
+                        }
+                      >
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          Up to Date
+                        </span>
+                      </Show>
+                      <Show when={!isCheckingForUpdates() && updateCheckError()}>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                          Check Failed
+                        </span>
+                      </Show>
+                    </div>
+                    <p class="text-xs text-zinc-500 mt-0.5">
+                      Check GitHub Releases for new versions, release notes, and platform installers
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => void checkForUpdatesAction()}
+                    disabled={isCheckingForUpdates()}
+                    class="h-8 px-3.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
+                  >
+                    <RefreshCwIcon
+                      class={`w-3.5 h-3.5 ${
+                        isCheckingForUpdates() ? "animate-spin" : ""
+                      }`}
+                    />
+                    <span>
+                      {isCheckingForUpdates()
+                        ? "Checking…"
+                        : "Check for Updates"}
+                    </span>
+                  </button>
+                </div>
+
+                {/* Version Metrics Row */}
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                  <div class="p-3 rounded-lg border border-zinc-800/80 light:border-zinc-200 bg-zinc-900/50 light:bg-white">
+                    <div class="text-[10px] text-zinc-500 uppercase tracking-wider">
+                      Installed Version
+                    </div>
+                    <div class="font-mono font-semibold text-zinc-200 light:text-zinc-800 mt-0.5">
+                      v{updateCheckResult()?.currentVersion || "0.1.0"}
+                    </div>
+                  </div>
+                  <div class="p-3 rounded-lg border border-zinc-800/80 light:border-zinc-200 bg-zinc-900/50 light:bg-white">
+                    <div class="text-[10px] text-zinc-500 uppercase tracking-wider">
+                      Latest GitHub Release
+                    </div>
+                    <div class="font-mono font-semibold text-zinc-200 light:text-zinc-800 mt-0.5">
+                      v{updateCheckResult()?.latestVersion || "0.1.0"}
+                    </div>
+                  </div>
+                  <div class="p-3 rounded-lg border border-zinc-800/80 light:border-zinc-200 bg-zinc-900/50 light:bg-white">
+                    <div class="text-[10px] text-zinc-500 uppercase tracking-wider">
+                      Last Checked
+                    </div>
+                    <div class="text-zinc-300 light:text-zinc-700 font-medium mt-0.5">
+                      {updateCheckResult()?.checkedAt
+                        ? formatTimeAgo(updateCheckResult()!.checkedAt)
+                        : "Not checked yet"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Error Message Banner */}
+                <Show when={updateCheckError()}>
+                  {(err) => (
+                    <div class="p-3 rounded-lg border border-rose-500/30 bg-rose-500/10 text-xs text-rose-300 light:text-rose-700 flex items-center justify-between gap-3">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <AlertTriangleIcon class="w-4 h-4 text-rose-400 shrink-0" />
+                        <span class="truncate">{err()}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => void checkForUpdatesAction()}
+                        class="px-2.5 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 light:text-rose-800 font-medium shrink-0"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  )}
+                </Show>
+
+                {/* Release Details & Download Card */}
+                <Show when={updateCheckResult()}>
+                  {(res) => (
+                    <div
+                      class={`p-3.5 rounded-lg border space-y-3 ${
+                        res().updateAvailable
+                          ? "border-indigo-500/40 bg-indigo-500/10"
+                          : "border-zinc-800/80 light:border-zinc-200 bg-zinc-900/50 light:bg-white"
+                      }`}
+                    >
+                      <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                          <Show
+                            when={res().updateAvailable}
+                            fallback={
+                              <CheckIcon class="w-4 h-4 text-emerald-400 shrink-0" />
+                            }
+                          >
+                            <DownloadIcon class="w-4 h-4 text-indigo-400 shrink-0" />
+                          </Show>
+                          <div>
+                            <div class="text-xs font-semibold text-zinc-100 light:text-zinc-900">
+                              {res().updateAvailable
+                                ? `${res().releaseName} is available`
+                                : `RapidCal v${res().currentVersion} is up to date`}
+                            </div>
+                            <Show when={res().publishedAt}>
+                              <div class="text-[11px] text-zinc-500">
+                                Published{" "}
+                                {new Date(
+                                  res().publishedAt!
+                                ).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })}
+                              </div>
+                            </Show>
+                          </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2">
+                          <Show
+                            when={
+                              res().updateAvailable && res().recommendedAsset
+                            }
+                          >
+                            <button
+                              type="button"
+                              onClick={() =>
+                                void api.openExternalUrl(
+                                  res().recommendedAsset!.downloadUrl
+                                )
+                              }
+                              class="h-8 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                            >
+                              <DownloadIcon class="w-3.5 h-3.5 shrink-0" />
+                              <span>
+                                Download {res().recommendedAsset!.name}
+                              </span>
+                            </button>
+                          </Show>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void api.openExternalUrl(res().releaseUrl)
+                            }
+                            class="h-8 px-3 rounded-lg border border-zinc-700 light:border-zinc-300 bg-zinc-950/70 light:bg-zinc-100 hover:bg-zinc-800 light:hover:bg-zinc-200 text-xs font-medium text-zinc-200 light:text-zinc-800 transition-colors"
+                          >
+                            View on GitHub Releases
+                          </button>
+                        </div>
+                      </div>
+
+                      <Show
+                        when={
+                          res().releaseNotes &&
+                          (res().updateAvailable ||
+                            res().releaseNotes !==
+                              "You are running the latest version of RapidCal.")
+                        }
+                      >
+                        <div class="space-y-1.5 pt-2 border-t border-zinc-800/60 light:border-zinc-200">
+                          <div class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                            Release Notes
+                          </div>
+                          <pre class="max-h-44 overflow-y-auto p-2.5 rounded-md bg-zinc-950/70 light:bg-zinc-50 border border-zinc-800/70 light:border-zinc-200 text-[11px] font-mono text-zinc-300 light:text-zinc-700 whitespace-pre-wrap select-text">
+                            {res().releaseNotes}
+                          </pre>
+                        </div>
+                      </Show>
+                    </div>
+                  )}
+                </Show>
+
+                {/* Auto-check on Startup Toggle */}
+                <div class="rounded-lg border border-zinc-800 light:border-zinc-200 bg-zinc-900/50 light:bg-white p-3.5 flex items-center justify-between gap-4">
+                  <div>
+                    <div class="text-xs font-semibold text-zinc-200 light:text-zinc-800">
+                      Automatically Check for Updates on Launch
+                    </div>
+                    <div class="text-[11px] text-zinc-500">
+                      Check GitHub Releases in the background when RapidCal starts and notify you if a newer version is available
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={userPreferences().checkForUpdatesOnStartup !== false}
+                    onChange={(e) => {
+                      const enabled = e.currentTarget.checked;
+                      updateUserPreferences({
+                        checkForUpdatesOnStartup: enabled,
+                      });
+                      showToast(
+                        enabled
+                          ? "Enabled automatic update checks on launch"
+                          : "Disabled automatic update checks on launch"
+                      );
+                    }}
+                    class="w-4 h-4 rounded border-zinc-700 light:border-zinc-300 accent-indigo-600 cursor-pointer shrink-0"
+                  />
                 </div>
               </section>
             </div>

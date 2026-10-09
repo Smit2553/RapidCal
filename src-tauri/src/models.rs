@@ -181,3 +181,26 @@ pub struct NlpParseResult {
     pub attendees: Vec<String>,
     pub confidence: f32,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ReleaseAsset {
+    pub name: String,
+    pub download_url: String,
+    pub size_bytes: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateCheckResult {
+    pub current_version: String,
+    pub latest_version: String,
+    pub update_available: bool,
+    pub release_name: String,
+    pub release_notes: String,
+    pub release_url: String,
+    pub published_at: Option<String>,
+    pub checked_at: String,
+    pub recommended_asset: Option<ReleaseAsset>,
+    pub assets: Vec<ReleaseAsset>,
+}
