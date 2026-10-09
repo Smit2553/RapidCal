@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <defs>
+    <linearGradient id="rc-bg" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#18181b" />
+      <stop offset="100%" stop-color="#09090b" />
+    </linearGradient>
+    <linearGradient id="rc-accent" x1="20" y1="20" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#4f46e5" />
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="28" fill="url(#rc-bg)" stroke="#27272a" stroke-width="2" />
+  <rect x="22" y="26" width="76" height="72" rx="14" fill="#09090b" stroke="#3f3f46" stroke-width="2" />
+  <path d="M22 40C22 32.268 28.268 26 36 26H84C91.732 26 98 32.268 98 40V46H22V40Z" fill="url(#rc-accent)" />
+  <rect x="38" y="18" width="6" height="14" rx="3" fill="#a5b4fc" />
+  <rect x="76" y="18" width="6" height="14" rx="3" fill="#a5b4fc" />
+  <!-- Time grid blocks -->
+  <rect x="32" y="56" width="24" height="12" rx="4" fill="#6366f1" fill-opacity="0.9" />
+  <rect x="62" y="56" width="26" height="20" rx="4" fill="#0ea5e9" fill-opacity="0.85" />
+  <rect x="32" y="74" width="24" height="14" rx="4" fill="#10b981" fill-opacity="0.85" />
+  <!-- Live time needle -->
+  <line x1="26" y1="70" x2="94" y2="70" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round" />
+  <circle cx="28" cy="70" r="4" fill="#f43f5e" />
+</svg>
