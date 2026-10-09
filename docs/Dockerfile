@@ -5,7 +5,4 @@ COPY index.html privacy.html terms.html styles.css logo.svg icon.png CNAME /usr/
 COPY privacy /usr/share/nginx/html/privacy
 COPY terms /usr/share/nginx/html/terms
 
-EXPOSE 80
-
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:80/health || exit 1
+EXPOSE 80 3000
