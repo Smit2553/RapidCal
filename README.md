@@ -5,6 +5,9 @@
 
 **RapidCal** is a lightweight, offline-first cross-platform desktop calendar engineered in **Rust (Tauri v2)** and **SolidJS + TypeScript + Tailwind CSS** for `<1ms` UI interactions, a tiny memory footprint (`<10MB` background daemon when hibernated to system tray), and seamless multi-account sync across **Google Calendar** and **Microsoft Outlook / Microsoft 365**.
 
+> [!NOTE]
+> **AI Disclosure:** This project was built with the assistance of AI coding agents, and is actively used and dogfooded every day by me (the developer) as my primary desktop calendar.
+
 ---
 
 ## Key Features
