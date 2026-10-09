@@ -231,3 +231,84 @@ export function getPrimaryTimezoneAbbr(): string {
     return "Local";
   }
 }
+
+/**
+ * Formats an IANA timezone string (e.g. "America/New_York") into a concise 3-4 letter
+ * uppercase city/region tag (e.g. "NYC", "LON", "UTC", "LA", "CHI", etc.) for space-constrained gutters.
+ */
+export function formatTzCityAbbreviation(tz: string): string {
+  if (!tz) return "UTC";
+  const trimmed = tz.trim();
+
+  // 1. Direct dictionary for standard project timezones
+  const KNOWN_TAGS: Record<string, string> = {
+    "America/New_York": "NYC",
+    "America/Chicago": "CHI",
+    "America/Denver": "DEN",
+    "America/Los_Angeles": "LA",
+    "America/Phoenix": "PHX",
+    "America/Toronto": "TOR",
+    "America/Vancouver": "VAN",
+    "America/Sao_Paulo": "SAO",
+    "Europe/London": "LON",
+    "Europe/Berlin": "BER",
+    "Europe/Paris": "PAR",
+    "Europe/Amsterdam": "AMS",
+    "Europe/Madrid": "MAD",
+    "Europe/Rome": "ROM",
+    "Europe/Dublin": "DUB",
+    "Asia/Kolkata": "DEL",
+    "Asia/Calcutta": "DEL",
+    "Asia/Singapore": "SGP",
+    "Asia/Tokyo": "TYO",
+    "Asia/Hong_Kong": "HKG",
+    "Asia/Shanghai": "SHA",
+    "Asia/Dubai": "DXB",
+    "Australia/Sydney": "SYD",
+    "Australia/Melbourne": "MEL",
+    "Pacific/Auckland": "AKL",
+    "Pacific/Honolulu": "HNL",
+    UTC: "UTC",
+    GMT: "GMT",
+  };
+
+  if (KNOWN_TAGS[trimmed]) {
+    return KNOWN_TAGS[trimmed];
+  }
+
+  // 2. Intl fallback for standard short abbreviations (e.g. EST, JST, CET)
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: trimmed,
+      timeZoneName: "short",
+    }).formatToParts(new Date());
+    const abbr = parts.find((p) => p.type === "timeZoneName")?.value;
+    if (
+      abbr &&
+      abbr.length <= 4 &&
+      !abbr.startsWith("GMT") &&
+      !abbr.startsWith("UTC")
+    ) {
+      return abbr;
+    }
+  } catch {
+    // Ignore Intl formatting errors
+  }
+
+  // 3. Fallback: derive acronym from city name
+  const city = trimmed.split("/").pop()?.replace(/_/g, " ") || trimmed;
+  if (city.length <= 4) {
+    return city.toUpperCase();
+  }
+  const words = city.split(" ");
+  if (words.length > 1) {
+    return words
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 4);
+  }
+  return city.slice(0, 3).toUpperCase();
+}
+
+export const formatTimezoneTag = formatTzCityAbbreviation;

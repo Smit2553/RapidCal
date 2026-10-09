@@ -12,14 +12,18 @@ import {
   formatHourLabel,
   formatSecondaryTzHour,
   formatTimeRange,
+  formatTimeShort,
+  formatTzCityAbbreviation,
   getPrimaryTimezoneAbbr,
   getVisibleDaysForView,
   isSameDay,
   startOfDay,
 } from "../lib/dateUtils";
 import { api } from "../lib/tauri";
+import { RepeatIcon, VideoIcon } from "./icons/Icons";
 import {
   anchorDate,
+  hourHeightPx,
   inspectorEditScope,
   moveOrResizeEventOptimistic,
   oauthConfig,
@@ -33,7 +37,6 @@ import {
 } from "../store/calendarStore";
 import type { ViewportEvent } from "../types/calendar";
 
-const HOUR_HEIGHT_PX = 56;
 const DAY_HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 export function TimeGridView() {
@@ -68,15 +71,25 @@ export function TimeGridView() {
     // Scroll to the user's configured start of working hours initially
     if (scrollContainerRef) {
       const startHour = userPreferences().workingHoursStart ?? 9;
-      scrollContainerRef.scrollTop = Math.max(0, startHour * HOUR_HEIGHT_PX - 24);
+      scrollContainerRef.scrollTop = Math.max(0, startHour * hourHeightPx() - 24);
     }
+
+    let prevHourHeight = hourHeightPx();
+    createEffect(() => {
+      const currentH = hourHeightPx();
+      if (scrollContainerRef && prevHourHeight !== currentH && prevHourHeight > 0) {
+        const ratio = currentH / prevHourHeight;
+        scrollContainerRef.scrollTop = Math.round(scrollContainerRef.scrollTop * ratio);
+        prevHourHeight = currentH;
+      }
+    });
 
     const onWindowMouseMove = (e: MouseEvent) => {
       const st = dragState();
       if (!st) return;
       const deltaY = e.clientY - st.startClientY;
       // Snap to 15-minute (900s) increments
-      const deltaQuarters = Math.round(deltaY / (HOUR_HEIGHT_PX / 4));
+      const deltaQuarters = Math.round(deltaY / (hourHeightPx() / 4));
       const deltaSecs = deltaQuarters * 900;
 
       if (st.mode === "move") {
@@ -197,19 +210,36 @@ export function TimeGridView() {
   return (
     <div class="flex-1 flex flex-col min-w-0 min-h-0 bg-zinc-950 light:bg-white select-none">
       {/* Sticky Column Header Row: Timezone Labels + Day Headers */}
-      <div class="flex border-b border-zinc-800/80 light:border-zinc-200 bg-zinc-950/90 light:bg-zinc-50 shrink-0">
+      <div
+        class="flex border-b border-zinc-800/80 light:border-zinc-200 bg-zinc-950/90 light:bg-zinc-50 shrink-0 overflow-y-hidden"
+        style={{ "scrollbar-gutter": "stable" }}
+      >
         {/* Timezone Gutter Header */}
         <div
           class={`${
-            userPreferences().showSecondaryTimezone ? "w-24" : "w-16"
-          } shrink-0 border-r border-zinc-800/80 light:border-zinc-200 px-2 py-2 flex items-end justify-between text-[10px] font-mono-tabular text-zinc-500`}
+            userPreferences().showSecondaryTimezone ? "w-28" : "w-20"
+          } shrink-0 border-r border-zinc-800/80 light:border-zinc-200 px-1.5 py-2 flex items-end text-[10px] font-mono-tabular text-zinc-500 select-none`}
         >
-          <Show when={userPreferences().showSecondaryTimezone}>
-            <span>{secondaryTz()}</span>
+          <Show
+            when={userPreferences().showSecondaryTimezone}
+            fallback={
+              <span class="text-zinc-400 light:text-zinc-600 font-semibold ml-auto text-right pr-0.5">
+                {primaryTz}
+              </span>
+            }
+          >
+            <div class="grid grid-cols-2 gap-1 w-full items-end">
+              <span
+                class="text-zinc-500 light:text-zinc-400 font-semibold text-left truncate"
+                title={secondaryTz()}
+              >
+                {formatTzCityAbbreviation(secondaryTz())}
+              </span>
+              <span class="text-zinc-400 light:text-zinc-600 font-semibold text-right pr-0.5 truncate">
+                {primaryTz}
+              </span>
+            </div>
           </Show>
-          <span class="text-zinc-400 light:text-zinc-600 font-semibold ml-auto">
-            {primaryTz}
-          </span>
         </div>
 
         {/* Day Column Headers */}
@@ -250,7 +280,7 @@ export function TimeGridView() {
                   </div>
 
                   {/* All-Day Event Banner Pills */}
-                  <div class="space-y-1 min-h-[18px]">
+                  <div class="space-y-1 min-h-[18px] max-h-24 overflow-y-auto">
                     <For each={allDayEventsForDay(day)}>
                       {(ev) => (
                         <button
@@ -281,32 +311,42 @@ export function TimeGridView() {
       <div
         ref={scrollContainerRef}
         class="flex-1 overflow-y-auto relative flex"
+        style={{ "scrollbar-gutter": "stable" }}
       >
         {/* Timezone Gutter */}
         <div
           class={`${
-            userPreferences().showSecondaryTimezone ? "w-24" : "w-16"
+            userPreferences().showSecondaryTimezone ? "w-28" : "w-20"
           } shrink-0 border-r border-zinc-800/80 light:border-zinc-200 bg-zinc-950 light:bg-zinc-50 select-none`}
-          style={{ height: `${24 * HOUR_HEIGHT_PX}px` }}
+          style={{ height: `${24 * hourHeightPx()}px` }}
         >
           <For each={DAY_HOURS}>
             {(hour) => (
               <div
-                class="relative pr-2 pl-1.5 flex items-start justify-between text-[10px] font-mono-tabular"
-                style={{ height: `${HOUR_HEIGHT_PX}px` }}
+                class="relative px-1.5 flex items-start text-[10px] font-mono-tabular"
+                style={{ height: `${hourHeightPx()}px` }}
               >
-                <Show when={userPreferences().showSecondaryTimezone}>
-                  <span class="-mt-1.5 text-zinc-600 light:text-zinc-400">
-                    {formatSecondaryTzHour(
-                      hour,
-                      secondaryTz(),
-                      userPreferences().timeFormat
-                    )}
-                  </span>
+                <Show
+                  when={userPreferences().showSecondaryTimezone}
+                  fallback={
+                    <span class="-mt-1.5 text-zinc-400 light:text-zinc-600 ml-auto text-right pr-0.5 truncate">
+                      {formatHourLabel(hour, userPreferences().timeFormat)}
+                    </span>
+                  }
+                >
+                  <div class="grid grid-cols-2 gap-1 w-full items-start">
+                    <span class="-mt-1.5 text-zinc-600 light:text-zinc-400 text-left truncate">
+                      {formatSecondaryTzHour(
+                        hour,
+                        secondaryTz(),
+                        userPreferences().timeFormat
+                      )}
+                    </span>
+                    <span class="-mt-1.5 text-zinc-400 light:text-zinc-600 text-right pr-0.5 truncate">
+                      {formatHourLabel(hour, userPreferences().timeFormat)}
+                    </span>
+                  </div>
                 </Show>
-                <span class="-mt-1.5 text-zinc-400 light:text-zinc-600 ml-auto">
-                  {formatHourLabel(hour, userPreferences().timeFormat)}
-                </span>
               </div>
             )}
           </For>
@@ -317,7 +357,7 @@ export function TimeGridView() {
           class="flex-1 grid relative"
           style={{
             "grid-template-columns": `repeat(${visibleDays().length}, minmax(0, 1fr))`,
-            height: `${24 * HOUR_HEIGHT_PX}px`,
+            height: `${24 * hourHeightPx()}px`,
           }}
         >
           <For each={visibleDays()}>
@@ -336,7 +376,7 @@ export function TimeGridView() {
                   e.currentTarget as HTMLDivElement
                 ).getBoundingClientRect();
                 const offsetY = Math.max(0, e.clientY - rect.top);
-                const quarterIndex = Math.floor(offsetY / (HOUR_HEIGHT_PX / 4));
+                const quarterIndex = Math.floor(offsetY / (hourHeightPx() / 4));
                 const startTs = dayStartTs() + quarterIndex * 900;
                 const defaultDurSecs =
                   (userPreferences().defaultEventDurationMins || 30) * 60;
@@ -367,7 +407,7 @@ export function TimeGridView() {
                     {() => (
                       <div
                         class="border-b border-zinc-800/70 light:border-zinc-200/80 relative"
-                        style={{ height: `${HOUR_HEIGHT_PX}px` }}
+                        style={{ height: `${hourHeightPx()}px` }}
                       >
                         <div class="absolute inset-x-0 top-1/2 border-b border-dashed border-zinc-900/80 light:border-zinc-100 pointer-events-none" />
                       </div>
@@ -379,7 +419,7 @@ export function TimeGridView() {
                     <div
                       class="absolute inset-x-0 z-20 pointer-events-none flex items-center"
                       style={{
-                        top: `${(currentTimeMinutes() / 60) * HOUR_HEIGHT_PX}px`,
+                        top: `${(currentTimeMinutes() / 60) * hourHeightPx()}px`,
                       }}
                     >
                       <div class="w-2 h-2 -ml-1 rounded-full bg-rose-500 shadow-[0_0_8px_#f43f5e]" />
@@ -408,8 +448,8 @@ export function TimeGridView() {
                         <div
                           class="absolute inset-x-1 rounded-md border border-indigo-400 bg-indigo-500/25 z-30 p-1.5 pointer-events-none"
                           style={{
-                            top: `${(startMins() / 60) * HOUR_HEIGHT_PX}px`,
-                            height: `${(durMins() / 60) * HOUR_HEIGHT_PX}px`,
+                            top: `${(startMins() / 60) * hourHeightPx()}px`,
+                            height: `${(durMins() / 60) * hourHeightPx()}px`,
                           }}
                         >
                           <div class="text-[11px] font-semibold text-indigo-200">
@@ -445,16 +485,30 @@ export function TimeGridView() {
                           0,
                           (effectiveStartTs() - dayStartTs()) / 60
                         );
-                        return (mins / 60) * HOUR_HEIGHT_PX;
+                        return (mins / 60) * hourHeightPx();
                       };
 
                       const heightPx = () => {
                         const durMins = Math.max(
-                          18,
+                          15,
                           (effectiveEndTs() - effectiveStartTs()) / 60
                         );
-                        return (durMins / 60) * HOUR_HEIGHT_PX - 1;
+                        const rawH = (durMins / 60) * hourHeightPx() - 1;
+                        return Math.max(20, Math.round(rawH));
                       };
+
+                      const isShortCard = () => {
+                        const durMins = (effectiveEndTs() - effectiveStartTs()) / 60;
+                        return heightPx() < 40 || durMins <= 30;
+                      };
+
+                      const approxDayColWidth = () => {
+                        const containerW = scrollContainerRef?.clientWidth || 800;
+                        const gutterW = userPreferences().showSecondaryTimezone ? 112 : 80;
+                        return Math.max(30, (containerW - gutterW) / Math.max(1, visibleDays().length));
+                      };
+                      const approxCardWidth = () => approxDayColWidth() / Math.max(1, ev.totalCols);
+                      const isNarrowCard = () => ev.totalCols > 1 || approxCardWidth() < 60;
 
                       const widthPct = () => 100 / Math.max(1, ev.totalCols);
                       const leftPct = () => ev.colIndex * widthPct();
@@ -467,6 +521,13 @@ export function TimeGridView() {
                         Boolean(ev.busyMirrorOfEventId);
                       const isSelected = () =>
                         selectedEvent()?.instanceId === ev.instanceId;
+
+                      const cardPaddingClass = () => {
+                        if (isShortCard() || isNarrowCard()) {
+                          return "px-1.5 py-0.5";
+                        }
+                        return "px-2 py-1";
+                      };
 
                       return (
                         <div
@@ -488,7 +549,7 @@ export function TimeGridView() {
                               startClientY: e.clientY,
                             });
                           }}
-                          class={`group absolute rounded-md px-2 py-1 overflow-hidden cursor-grab active:cursor-grabbing transition-shadow ${
+                          class={`group absolute rounded-md ${cardPaddingClass()} overflow-hidden cursor-grab active:cursor-grabbing transition-shadow ${
                             isTentativeOrBusy() ? "bg-tentative-stripes" : ""
                           } ${isPast() ? "opacity-60" : "opacity-100"} ${
                             isSelected()
@@ -498,8 +559,8 @@ export function TimeGridView() {
                           style={{
                             top: `${topPx()}px`,
                             height: `${heightPx()}px`,
-                            left: `calc(${leftPct()}% + 2px)`,
-                            width: `calc(${widthPct()}% - 4px)`,
+                            left: ev.totalCols > 1 ? `calc(${leftPct()}% + 1px)` : `calc(${leftPct()}% + 2px)`,
+                            width: ev.totalCols > 1 ? `calc(${widthPct()}% - 2px)` : `calc(${widthPct()}% - 4px)`,
                             "background-color": `${ev.colorHex}29`,
                             "border-left": `3px solid ${ev.colorHex}`,
                             border: isSelected()
@@ -508,56 +569,94 @@ export function TimeGridView() {
                             "border-left-width": "3px",
                           }}
                         >
-                          <div class="flex items-start justify-between gap-1">
-                            <span class="text-[11px] font-semibold leading-tight text-zinc-100 light:text-zinc-900 truncate">
-                              {ev.title}
-                            </span>
-                            <div class="flex items-center gap-1 shrink-0">
-                              <Show when={ev.isDirty}>
-                                <span
-                                  class="w-1.5 h-1.5 rounded-full bg-amber-400"
-                                  title="Waiting to sync"
-                                />
-                              </Show>
-                              <Show when={ev.isRecurring}>
-                                <span
-                                  class="text-[9px] text-zinc-400"
-                                  title={ev.rruleHuman || "Recurring"}
-                                >
-                                  ↻
-                                </span>
-                              </Show>
-                            </div>
-                          </div>
-
-                          <div class="text-[10px] font-mono-tabular text-zinc-300 light:text-zinc-700 truncate">
-                            {formatTimeRange(
-                              effectiveStartTs(),
-                              effectiveEndTs(),
-                              userPreferences().timeFormat
-                            )}
-                          </div>
-
-                          <Show when={heightPx() >= 48 && ev.conferenceUrl}>
-                            <button
-                              type="button"
-                              onMouseDown={(e) => e.stopPropagation()}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (ev.conferenceUrl) {
-                                  void api.openExternalUrl(ev.conferenceUrl);
-                                }
-                              }}
-                              class="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-zinc-950/70 light:bg-white/80 text-indigo-300 light:text-indigo-700 hover:bg-indigo-600 hover:text-white transition-colors"
-                            >
-                              <span>
-                                ▶ Join{" "}
-                                {(ev.conferenceProvider || "Video").toUpperCase()}
+                          <Show
+                            when={!isShortCard()}
+                            fallback={
+                              /* Compact Single-Line Inline Layout for <=30m or height < 40px */
+                              <div class="flex items-center justify-between gap-1 w-full min-w-0 leading-none h-full">
+                                <div class="flex items-center gap-1 min-w-0 truncate">
+                                  <span class="text-[10px] font-semibold leading-none text-zinc-100 light:text-zinc-900 truncate">
+                                    {ev.title}
+                                  </span>
+                                  <Show when={ev.isDirty}>
+                                    <span
+                                      class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"
+                                      title="Waiting to sync"
+                                    />
+                                  </Show>
+                                  <Show when={ev.isRecurring && approxCardWidth() >= 50}>
+                                    <span
+                                      class="text-[9px] text-zinc-400 inline-flex items-center shrink-0"
+                                      title={ev.rruleHuman || "Recurring"}
+                                    >
+                                      <RepeatIcon class="w-2.5 h-2.5 shrink-0" />
+                                    </span>
+                                  </Show>
+                                </div>
+                                <Show when={approxCardWidth() >= 45}>
+                                  <span class="text-[9px] font-mono-tabular text-zinc-300 light:text-zinc-700 shrink-0 leading-none opacity-85">
+                                    {formatTimeShort(
+                                      effectiveStartTs(),
+                                      userPreferences().timeFormat
+                                    )}
+                                  </span>
+                                </Show>
+                              </div>
+                            }
+                          >
+                            {/* Standard Multiline Layout for tall cards (height >= 40px) */}
+                            <div class="flex items-start justify-between gap-1">
+                              <span class="text-[11px] font-semibold leading-tight text-zinc-100 light:text-zinc-900 truncate">
+                                {ev.title}
                               </span>
-                            </button>
+                              <div class="flex items-center gap-1 shrink-0">
+                                <Show when={ev.isDirty}>
+                                  <span
+                                    class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"
+                                    title="Waiting to sync"
+                                  />
+                                </Show>
+                                <Show when={ev.isRecurring && (ev.totalCols === 1 || approxCardWidth() >= 50)}>
+                                  <span
+                                    class="text-[9px] text-zinc-400 inline-flex items-center shrink-0"
+                                    title={ev.rruleHuman || "Recurring"}
+                                  >
+                                    <RepeatIcon class="w-2.5 h-2.5 shrink-0" />
+                                  </span>
+                                </Show>
+                              </div>
+                            </div>
+
+                            <div class="text-[10px] font-mono-tabular text-zinc-300 light:text-zinc-700 truncate leading-tight mt-0.5">
+                              {formatTimeRange(
+                                effectiveStartTs(),
+                                effectiveEndTs(),
+                                userPreferences().timeFormat
+                              )}
+                            </div>
+
+                            <Show when={heightPx() >= 48 && ev.conferenceUrl && approxCardWidth() >= 75}>
+                              <button
+                                type="button"
+                                onMouseDown={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (ev.conferenceUrl) {
+                                    void api.openExternalUrl(ev.conferenceUrl);
+                                  }
+                                }}
+                                class="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-zinc-950/70 light:bg-white/80 text-indigo-300 light:text-indigo-700 hover:bg-indigo-600 hover:text-white transition-colors"
+                              >
+                                <VideoIcon class="w-2.5 h-2.5 shrink-0" />
+                                <span class="truncate">
+                                  Join{" "}
+                                  {(ev.conferenceProvider || "Video").toUpperCase()}
+                                </span>
+                              </button>
+                            </Show>
                           </Show>
 
-                          {/* Bottom Resize Handle (15-min snap) */}
+                          {/* Bottom Resize Handle (15-min snap): h-1 on short cards, h-2 on tall cards */}
                           <div
                             onMouseDown={(e) => {
                               e.stopPropagation();
@@ -574,7 +673,9 @@ export function TimeGridView() {
                                 startClientY: e.clientY,
                               });
                             }}
-                            class="absolute inset-x-0 bottom-0 h-2 cursor-ns-resize opacity-0 group-hover:opacity-100 bg-white/15"
+                            class={`absolute inset-x-0 bottom-0 ${
+                              isShortCard() ? "h-1" : "h-2"
+                            } cursor-ns-resize opacity-0 group-hover:opacity-100 bg-white/15`}
                           />
                         </div>
                       );

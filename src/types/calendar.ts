@@ -13,7 +13,25 @@ export type SettingsTab =
   | "calendars"
   | "timezones"
   | "sync"
-  | "shortcuts";
+  | "shortcuts"
+  | "advanced";
+
+export type TargetPlatform = "mac" | "windows" | "linux";
+
+export type PlatformShortcutStyle = "auto" | "mac" | "windows_linux";
+
+export type EffectivePlatformStyle = "mac" | "windows_linux";
+
+export type GridDensity = "compact" | "standard" | "spacious" | "custom";
+
+export interface KeyCombo {
+  mod?: boolean;
+  ctrl?: boolean;
+  meta?: boolean;
+  alt?: boolean;
+  shift?: boolean;
+  key: string;
+}
 
 export interface UserPreferences {
   defaultView: Exclude<CalendarViewMode, "settings">;
@@ -24,7 +42,11 @@ export interface UserPreferences {
   workingHoursEnd: number;
   showSecondaryTimezone: boolean;
   highlightWeekends: boolean;
+  platformShortcutStyle?: PlatformShortcutStyle;
+  gridDensity?: GridDensity;
+  hourHeight?: number;
 }
+
 
 export interface Account {
   id: string;

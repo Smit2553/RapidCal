@@ -19,6 +19,13 @@ import {
   startNewEventDraft,
   updateRsvpOptimistic,
 } from "../store/calendarStore";
+import { formatModKey } from "../lib/platform";
+import {
+  CalendarIcon,
+  PlusIcon,
+  ShieldIcon,
+  VideoIcon,
+} from "./icons/Icons";
 
 const RRULE_PRESETS = [
   { label: "Does not repeat", value: "" },
@@ -144,8 +151,8 @@ export function EventInspector() {
           when={selectedEvent() || draftSlot()}
           fallback={
             <div class="p-6 flex-1 flex flex-col items-center justify-center text-center space-y-3 text-zinc-500">
-              <div class="w-10 h-10 rounded-full border border-zinc-800 light:border-zinc-200 flex items-center justify-center text-lg">
-                📅
+              <div class="w-10 h-10 rounded-full border border-zinc-800 light:border-zinc-200 flex items-center justify-center bg-zinc-900/40 light:bg-zinc-100">
+                <CalendarIcon class="w-5 h-5 text-zinc-400 light:text-zinc-500 shrink-0" />
               </div>
               <div class="space-y-1">
                 <p class="text-xs font-medium text-zinc-300 light:text-zinc-700">
@@ -153,7 +160,7 @@ export function EventInspector() {
                 </p>
                 <p class="text-[11px] text-zinc-500">
                   Click any event on the grid, drag across time slots, or press{" "}
-                  <kbd class="px-1 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono-tabular">
+                  <kbd class="px-1 py-0.5 rounded bg-zinc-800 light:bg-zinc-200 text-zinc-300 light:text-zinc-700 font-mono-tabular">
                     C
                   </kbd>{" "}
                   to create.
@@ -162,9 +169,10 @@ export function EventInspector() {
               <button
                 type="button"
                 onClick={() => startNewEventDraft()}
-                class="h-7 px-3 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium"
+                class="h-7 px-3 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium flex items-center gap-1.5 transition-colors"
               >
-                + New Event
+                <PlusIcon class="w-3.5 h-3.5 shrink-0" />
+                <span>New Event</span>
               </button>
             </div>
           }
@@ -214,9 +222,11 @@ export function EventInspector() {
                       selectedEvent()?.conferenceUrl || conferenceUrl();
                     if (url) void api.openExternalUrl(url);
                   }}
-                  class="shrink-0 h-7 px-2.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold"
+                  title={`Join Video Call (${formatModKey("J")})`}
+                  class="shrink-0 h-7 px-2.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
                 >
-                  Join ⌘J
+                  <VideoIcon class="w-3.5 h-3.5 shrink-0" />
+                  <span>Join {formatModKey("J")}</span>
                 </button>
               </div>
             </Show>
@@ -307,16 +317,16 @@ export function EventInspector() {
               </select>
 
               <Show when={selectedEvent()?.isRecurring}>
-                <div class="pt-1 flex items-center justify-between text-[11px] text-zinc-400">
+                <div class="pt-1 flex items-center justify-between text-[11px] text-zinc-400 light:text-zinc-600">
                   <span>Apply changes to:</span>
-                  <div class="flex rounded border border-zinc-800 overflow-hidden">
+                  <div class="flex rounded border border-zinc-800 light:border-zinc-300 overflow-hidden">
                     <button
                       type="button"
                       onClick={() => setEditScope("single")}
-                      class={`px-2 py-0.5 ${
+                      class={`px-2 py-0.5 text-xs transition-colors ${
                         editScope() === "single"
-                          ? "bg-indigo-600 text-white"
-                          : "bg-zinc-900 text-zinc-400"
+                          ? "bg-indigo-600 text-white font-medium"
+                          : "bg-zinc-900 light:bg-zinc-100 text-zinc-400 light:text-zinc-600 hover:text-zinc-200 light:hover:text-zinc-900 hover:bg-zinc-800/60 light:hover:bg-zinc-200"
                       }`}
                     >
                       This event
@@ -324,10 +334,10 @@ export function EventInspector() {
                     <button
                       type="button"
                       onClick={() => setEditScope("all")}
-                      class={`px-2 py-0.5 ${
+                      class={`px-2 py-0.5 text-xs transition-colors border-l border-zinc-800 light:border-zinc-300 ${
                         editScope() === "all"
-                          ? "bg-indigo-600 text-white"
-                          : "bg-zinc-900 text-zinc-400"
+                          ? "bg-indigo-600 text-white font-medium"
+                          : "bg-zinc-900 light:bg-zinc-100 text-zinc-400 light:text-zinc-600 hover:text-zinc-200 light:hover:text-zinc-900 hover:bg-zinc-800/60 light:hover:bg-zinc-200"
                       }`}
                     >
                       All events
@@ -388,10 +398,10 @@ export function EventInspector() {
                         <button
                           type="button"
                           onClick={() => void updateRsvpOptimistic(sel(), st)}
-                          class={`px-2.5 py-0.5 font-medium ${
+                          class={`px-2.5 py-0.5 font-medium transition-colors ${
                             sel().selfRsvp === st
                               ? "bg-indigo-600 text-white"
-                              : "bg-zinc-900 light:bg-zinc-100 text-zinc-400"
+                              : "bg-zinc-900 light:bg-zinc-100 text-zinc-400 light:text-zinc-600 hover:text-zinc-200 light:hover:text-zinc-900"
                           }`}
                         >
                           {lbl}
@@ -445,8 +455,9 @@ export function EventInspector() {
               }
             >
               <div class="rounded-lg border border-zinc-800/80 light:border-zinc-200 bg-zinc-900/40 light:bg-white p-2.5 space-y-2">
-                <div class="text-[11px] font-semibold text-zinc-300 light:text-zinc-700">
-                  🛡 Block Time on Another Calendar
+                <div class="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-300 light:text-zinc-700">
+                  <ShieldIcon class="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                  <span>Block Time on Another Calendar</span>
                 </div>
                 <p class="text-[10px] text-zinc-500 leading-relaxed">
                   Copy this time slot onto another calendar so people see
@@ -484,7 +495,7 @@ export function EventInspector() {
                         );
                       }
                     }}
-                    class="h-6 px-2.5 rounded bg-zinc-800 hover:bg-indigo-600 text-zinc-200 hover:text-white text-[11px] font-medium transition-colors"
+                    class="h-6 px-2.5 rounded bg-zinc-800 light:bg-zinc-200 hover:bg-indigo-600 light:hover:bg-indigo-600 text-zinc-200 light:text-zinc-800 hover:text-white light:hover:text-white text-[11px] font-medium transition-colors"
                   >
                     Block Time
                   </button>
@@ -500,7 +511,7 @@ export function EventInspector() {
                   <button
                     type="button"
                     onClick={() => setDraftSlot(null)}
-                    class="h-8 px-3 rounded-md border border-zinc-800 text-xs text-zinc-400 hover:text-zinc-200"
+                    class="h-8 px-3 rounded-md border border-zinc-800 light:border-zinc-300 bg-zinc-900/50 light:bg-zinc-100 hover:bg-zinc-800 light:hover:bg-zinc-200 text-xs text-zinc-400 light:text-zinc-600 hover:text-zinc-200 light:hover:text-zinc-900 transition-colors"
                   >
                     Cancel
                   </button>
@@ -526,7 +537,7 @@ export function EventInspector() {
                 type="submit"
                 class="flex-1 h-8 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-colors"
               >
-                {selectedEvent() ? "Save Changes" : "Create Event"}
+                {selectedEvent() ? "Save Changes" : "Save Event"}
               </button>
             </div>
           </form>

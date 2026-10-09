@@ -20,6 +20,22 @@ import {
   userPreferences,
   viewMode,
 } from "../store/calendarStore";
+import { enterKeyLabel, formatModKey } from "../lib/platform";
+import {
+  CalendarIcon,
+  CornerDownLeftIcon,
+  FolderIcon,
+  ListIcon,
+  MapPinIcon,
+  RefreshCwIcon,
+  RepeatIcon,
+  SearchIcon,
+  SettingsIcon,
+  SunMoonIcon,
+  TagIcon,
+  VideoIcon,
+  ZapIcon,
+} from "./icons/Icons";
 import type { NlpParseResult, ViewportEvent } from "../types/calendar";
 
 export function CommandPalette() {
@@ -123,24 +139,26 @@ export function CommandPalette() {
               <button
                 type="button"
                 onClick={() => setMode("nlp")}
-                class={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                class={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
                   mode() === "nlp"
                     ? "bg-indigo-600 text-white"
                     : "text-zinc-400 hover:text-zinc-200"
                 }`}
               >
-                ⚡ Quick Add Event (C)
+                <ZapIcon class={`w-3.5 h-3.5 ${mode() === "nlp" ? "text-white" : "text-amber-400"}`} />
+                <span>Quick Add Event (C)</span>
               </button>
               <button
                 type="button"
                 onClick={() => setMode("search")}
-                class={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                class={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
                   mode() === "search"
                     ? "bg-indigo-600 text-white"
                     : "text-zinc-400 hover:text-zinc-200"
                 }`}
               >
-                🔍 Search Events (⌘F)
+                <SearchIcon class={`w-3.5 h-3.5 ${mode() === "search" ? "text-white" : "text-indigo-400"}`} />
+                <span>Search Events ({formatModKey("F")})</span>
               </button>
             </div>
             <kbd class="text-[10px] font-mono-tabular px-1.5 py-0.5 rounded bg-zinc-800 light:bg-zinc-200 text-zinc-400">
@@ -175,42 +193,54 @@ export function CommandPalette() {
                   <button
                     type="button"
                     onClick={() => void handleConfirmNlpCreate()}
-                    class="h-6 px-2.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold"
+                    class="h-6 px-2.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5"
                   >
-                    Create Event ↵
+                    <span>Create Event</span>
+                    <kbd class="text-[10px] font-mono-tabular px-1 py-0.5 rounded bg-indigo-700/60 text-indigo-100 flex items-center gap-0.5">
+                      <CornerDownLeftIcon class="w-2.5 h-2.5" />
+                      <span>{enterKeyLabel()}</span>
+                    </kbd>
                   </button>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-1.5 text-xs">
-                  <span class="px-2 py-0.5 rounded bg-zinc-900 light:bg-white border border-zinc-700 light:border-zinc-300 font-semibold text-zinc-100 light:text-zinc-900">
-                    📌 {preview().title}
+                  <span class="px-2 py-0.5 rounded bg-zinc-900 light:bg-white border border-zinc-700 light:border-zinc-300 font-semibold text-zinc-100 light:text-zinc-900 flex items-center gap-1">
+                    <TagIcon class="w-3 h-3 text-zinc-400 shrink-0" />
+                    <span>{preview().title}</span>
                   </span>
-                  <span class="px-2 py-0.5 rounded bg-zinc-900 light:bg-white border border-zinc-800 font-mono-tabular text-zinc-300 light:text-zinc-700">
-                    📅 {formatDateInputValue(preview().startTs)} •{" "}
-                    {preview().isAllDay
-                      ? "All Day"
-                      : formatTimeRange(
-                          preview().startTs,
-                          preview().endTs,
-                          userPreferences().timeFormat
-                        )}
+                  <span class="px-2 py-0.5 rounded bg-zinc-900 light:bg-white border border-zinc-800 font-mono-tabular text-zinc-300 light:text-zinc-700 flex items-center gap-1">
+                    <CalendarIcon class="w-3 h-3 text-zinc-400 shrink-0" />
+                    <span>
+                      {formatDateInputValue(preview().startTs)} •{" "}
+                      {preview().isAllDay
+                        ? "All Day"
+                        : formatTimeRange(
+                            preview().startTs,
+                            preview().endTs,
+                            userPreferences().timeFormat
+                          )}
+                    </span>
                   </span>
-                  <span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 light:text-indigo-700 font-medium">
-                    🗂 {matchedCalName()}
+                  <span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 light:text-indigo-700 font-medium flex items-center gap-1">
+                    <FolderIcon class="w-3 h-3 text-indigo-400 shrink-0" />
+                    <span>{matchedCalName()}</span>
                   </span>
                   <Show when={preview().rruleHuman}>
-                    <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono-tabular">
-                      ↻ {preview().rruleHuman}
+                    <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono-tabular flex items-center gap-1">
+                      <RepeatIcon class="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span>{preview().rruleHuman}</span>
                     </span>
                   </Show>
                   <Show when={preview().conferenceProvider}>
-                    <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 uppercase font-semibold">
-                      🎥 {preview().conferenceProvider}
+                    <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 uppercase font-semibold flex items-center gap-1">
+                      <VideoIcon class="w-3 h-3 text-sky-400 shrink-0" />
+                      <span>{preview().conferenceProvider}</span>
                     </span>
                   </Show>
                   <Show when={preview().location}>
-                    <span class="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">
-                      📍 {preview().location}
+                    <span class="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 flex items-center gap-1">
+                      <MapPinIcon class="w-3 h-3 text-zinc-400 shrink-0" />
+                      <span>{preview().location}</span>
                     </span>
                   </Show>
                 </div>
@@ -279,9 +309,12 @@ export function CommandPalette() {
                 }}
                 class="px-2.5 py-1.5 rounded-md hover:bg-zinc-900 light:hover:bg-zinc-100 flex items-center justify-between text-zinc-300 light:text-zinc-700"
               >
-                <span>🎥 Join Active/Next Video Call</span>
+                <span class="flex items-center gap-2">
+                  <VideoIcon class="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                  <span>Join Active/Next Video Call</span>
+                </span>
                 <kbd class="font-mono-tabular text-[10px] text-zinc-500">
-                  ⌘J
+                  {formatModKey("J")}
                 </kbd>
               </button>
               <button
@@ -292,9 +325,12 @@ export function CommandPalette() {
                 }}
                 class="px-2.5 py-1.5 rounded-md hover:bg-zinc-900 light:hover:bg-zinc-100 flex items-center justify-between text-zinc-300 light:text-zinc-700"
               >
-                <span>🔄 Sync All Calendars Now</span>
+                <span class="flex items-center gap-2">
+                  <RefreshCwIcon class="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <span>Sync All Calendars Now</span>
+                </span>
                 <kbd class="font-mono-tabular text-[10px] text-zinc-500">
-                  ⌘R
+                  {formatModKey("R")}
                 </kbd>
               </button>
               <button
@@ -305,7 +341,10 @@ export function CommandPalette() {
                 }}
                 class="px-2.5 py-1.5 rounded-md hover:bg-zinc-900 light:hover:bg-zinc-100 flex items-center justify-between text-zinc-300 light:text-zinc-700"
               >
-                <span>📍 Go to Today</span>
+                <span class="flex items-center gap-2">
+                  <CalendarIcon class="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Go to Today</span>
+                </span>
                 <kbd class="font-mono-tabular text-[10px] text-zinc-500">T</kbd>
               </button>
               <button
@@ -316,7 +355,10 @@ export function CommandPalette() {
                 }}
                 class="px-2.5 py-1.5 rounded-md hover:bg-zinc-900 light:hover:bg-zinc-100 flex items-center justify-between text-zinc-300 light:text-zinc-700"
               >
-                <span>📋 View Upcoming Schedule</span>
+                <span class="flex items-center gap-2">
+                  <ListIcon class="w-3.5 h-3.5 text-violet-400 shrink-0" />
+                  <span>View Upcoming Schedule</span>
+                </span>
                 <kbd class="font-mono-tabular text-[10px] text-zinc-500">A</kbd>
               </button>
               <button
@@ -327,7 +369,10 @@ export function CommandPalette() {
                 }}
                 class="px-2.5 py-1.5 rounded-md hover:bg-zinc-900 light:hover:bg-zinc-100 flex items-center justify-between text-zinc-300 light:text-zinc-700"
               >
-                <span>🌗 Switch Dark / Light Mode</span>
+                <span class="flex items-center gap-2">
+                  <SunMoonIcon class="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>Switch Dark / Light Mode</span>
+                </span>
                 <kbd class="font-mono-tabular text-[10px] text-zinc-500">
                   Theme
                 </kbd>
@@ -340,9 +385,12 @@ export function CommandPalette() {
                 }}
                 class="px-2.5 py-1.5 rounded-md hover:bg-zinc-900 light:hover:bg-zinc-100 flex items-center justify-between text-zinc-300 light:text-zinc-700"
               >
-                <span>⚙️ Open Settings & Accounts</span>
+                <span class="flex items-center gap-2">
+                  <SettingsIcon class="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                  <span>Open Settings & Accounts</span>
+                </span>
                 <kbd class="font-mono-tabular text-[10px] text-zinc-500">
-                  ⌘,
+                  {formatModKey(",")}
                 </kbd>
               </button>
             </div>

@@ -1,0 +1,191 @@
+{
+  "timestamp": "2026-10-09T02:27:45.618Z",
+  "totalSuites": 4,
+  "totalTests": 29,
+  "passed": 29,
+  "failed": 0,
+  "durationMs": 35902,
+  "suites": [
+    {
+      "name": "Tier 1: Feature Coverage Across Views",
+      "total": 10,
+      "passed": 10,
+      "failed": 0,
+      "defects": [],
+      "tests": [
+        {
+          "description": "TopBar renders brand title and navigation controls",
+          "status": "PASS",
+          "durationMs": 59
+        },
+        {
+          "description": "Switches to Day view and renders 1 day column",
+          "status": "PASS",
+          "durationMs": 366
+        },
+        {
+          "description": "Switches to 3-Day view and renders 3 day columns",
+          "status": "PASS",
+          "durationMs": 387
+        },
+        {
+          "description": "Switches to Work Week view and renders 5 day columns",
+          "status": "PASS",
+          "durationMs": 396
+        },
+        {
+          "description": "Switches to Week view and renders 7 day columns",
+          "status": "PASS",
+          "durationMs": 385
+        },
+        {
+          "description": "Switches to Month view and renders month grid cells",
+          "status": "PASS",
+          "durationMs": 401
+        },
+        {
+          "description": "Switches to Schedule / Agenda view and renders list",
+          "status": "PASS",
+          "durationMs": 390
+        },
+        {
+          "description": "Opens Settings dialog and navigates across all tabs",
+          "status": "PASS",
+          "durationMs": 1909
+        },
+        {
+          "description": "Closes Settings and returns to calendar view",
+          "status": "PASS",
+          "durationMs": 415
+        },
+        {
+          "description": "Opens Command Palette modal, verifies modes, and dismisses",
+          "status": "PASS",
+          "durationMs": 838
+        }
+      ]
+    },
+    {
+      "name": "Tier 2: Boundary & Corner Cases",
+      "total": 7,
+      "passed": 7,
+      "failed": 0,
+      "defects": [],
+      "tests": [
+        {
+          "description": "Minimum Viewport 960x640 with Dual Sidebars Open",
+          "status": "PASS",
+          "durationMs": 808
+        },
+        {
+          "description": "Time-Grid Gutter Widths & 12-Hour Mode Formatting",
+          "status": "PASS",
+          "durationMs": 1524
+        },
+        {
+          "description": "Time-Grid Gutter Widths & 24-Hour Mode Formatting",
+          "status": "PASS",
+          "durationMs": 1292
+        },
+        {
+          "description": "Dual Timezone Gutter Width & Formatting",
+          "status": "PASS",
+          "durationMs": 1059
+        },
+        {
+          "description": "Short-Duration (15m/30m) Event Cards Layout & Bounds",
+          "status": "PASS",
+          "durationMs": 349
+        },
+        {
+          "description": "Overlapping Concurrent Event Cards Packing",
+          "status": "PASS",
+          "durationMs": 353
+        },
+        {
+          "description": "Horizontal Overflow Audit Across Responsive Viewports",
+          "status": "PASS",
+          "durationMs": 1766
+        }
+      ]
+    },
+    {
+      "name": "Tier 3: Cross-Feature Tests",
+      "total": 6,
+      "passed": 6,
+      "failed": 0,
+      "defects": [],
+      "tests": [
+        {
+          "description": "Platform Emulation: MacIntel displays macOS symbols (⌘)",
+          "status": "PASS",
+          "durationMs": 904
+        },
+        {
+          "description": "Platform Emulation: Linux x86_64 displays Ctrl shortcuts",
+          "status": "PASS",
+          "durationMs": 901
+        },
+        {
+          "description": "Platform Emulation: Win32 displays Ctrl shortcuts",
+          "status": "PASS",
+          "durationMs": 869
+        },
+        {
+          "description": "Theme Switching: Dark Mode Contrast and CSS Classes",
+          "status": "PASS",
+          "durationMs": 796
+        },
+        {
+          "description": "Theme Switching: Light Mode Toggle and Contrast",
+          "status": "PASS",
+          "durationMs": 602
+        },
+        {
+          "description": "Timezone Configuration and Dynamic Grid Reflow",
+          "status": "PASS",
+          "durationMs": 1500
+        }
+      ]
+    },
+    {
+      "name": "Tier 4: Real-World User Flows",
+      "total": 6,
+      "passed": 6,
+      "failed": 0,
+      "defects": [],
+      "tests": [
+        {
+          "description": "User Flow 1: Create a new event via EventInspector",
+          "status": "PASS",
+          "durationMs": 1605
+        },
+        {
+          "description": "User Flow 2: Natural Language Quick Add via Command Palette",
+          "status": "PASS",
+          "durationMs": 1649
+        },
+        {
+          "description": "User Flow 3: Search Events in Command Palette",
+          "status": "PASS",
+          "durationMs": 1750
+        },
+        {
+          "description": "User Flow 4: Navigate Calendar Dates and Jump to Today",
+          "status": "PASS",
+          "durationMs": 1396
+        },
+        {
+          "description": "User Flow 5: Configure User Preferences in Settings",
+          "status": "PASS",
+          "durationMs": 2284
+        },
+        {
+          "description": "User Flow 6: Toggle Sidebars and Verify Responsive Reflow",
+          "status": "PASS",
+          "durationMs": 1250
+        }
+      ]
+    }
+  ]
+}

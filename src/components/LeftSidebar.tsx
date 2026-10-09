@@ -18,6 +18,15 @@ import {
   viewMode,
   viewportEvents,
 } from "../store/calendarStore";
+import { formatModKey } from "../lib/platform";
+import {
+  CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PlusIcon,
+  SettingsIcon,
+  ZapIcon,
+} from "./icons/Icons";
 
 const WEEKDAY_INITIALS_MON = ["M", "T", "W", "T", "F", "S", "S"];
 const WEEKDAY_INITIALS_SUN = ["S", "M", "T", "W", "T", "F", "S"];
@@ -63,16 +72,18 @@ export function LeftSidebar() {
                 <button
                   type="button"
                   onClick={() => setAnchorDate(addMonths(anchorDate(), -1))}
-                  class="w-5 h-5 rounded hover:bg-zinc-800 light:hover:bg-zinc-200 text-zinc-400 flex items-center justify-center text-xs"
+                  title="Previous Month"
+                  class="w-5 h-5 rounded hover:bg-zinc-800 light:hover:bg-zinc-200 text-zinc-400 light:text-zinc-600 flex items-center justify-center transition-colors"
                 >
-                  ‹
+                  <ChevronLeftIcon class="w-3 h-3 shrink-0" />
                 </button>
                 <button
                   type="button"
                   onClick={() => setAnchorDate(addMonths(anchorDate(), 1))}
-                  class="w-5 h-5 rounded hover:bg-zinc-800 light:hover:bg-zinc-200 text-zinc-400 flex items-center justify-center text-xs"
+                  title="Next Month"
+                  class="w-5 h-5 rounded hover:bg-zinc-800 light:hover:bg-zinc-200 text-zinc-400 light:text-zinc-600 flex items-center justify-center transition-colors"
                 >
-                  ›
+                  <ChevronRightIcon class="w-3 h-3 shrink-0" />
                 </button>
               </div>
             </div>
@@ -111,7 +122,7 @@ export function LeftSidebar() {
                             ? "border border-rose-500/70 text-rose-400 font-semibold"
                             : inCurrentMonth()
                               ? "text-zinc-300 light:text-zinc-700 hover:bg-zinc-800/70 light:hover:bg-zinc-200"
-                              : "text-zinc-600 light:text-zinc-400 hover:bg-zinc-900"
+                              : "text-zinc-600 light:text-zinc-400 hover:bg-zinc-800/70 light:hover:bg-zinc-200"
                       }`}
                     >
                       <span>{day.getDate()}</span>
@@ -134,9 +145,10 @@ export function LeftSidebar() {
               <button
                 type="button"
                 onClick={() => openSettings("accounts")}
-                class="text-[11px] text-indigo-400 hover:text-indigo-300 font-medium"
+                class="text-[11px] text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1 transition-colors"
               >
-                + Add Account
+                <PlusIcon class="w-3 h-3 shrink-0" />
+                <span>Add Account</span>
               </button>
             </div>
 
@@ -208,15 +220,7 @@ export function LeftSidebar() {
                                 }}
                               >
                                 <Show when={cal.isVisible}>
-                                  <svg
-                                    class="w-2 h-2 text-white"
-                                    viewBox="0 0 12 12"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                  >
-                                    <polyline points="2 6 5 9 10 3" />
-                                  </svg>
+                                  <CheckIcon class="w-2.5 h-2.5 text-white" strokeWidth={3} />
                                 </Show>
                               </span>
                               <span class="text-xs text-zinc-300 light:text-zinc-700 truncate">
@@ -246,8 +250,11 @@ export function LeftSidebar() {
             onClick={() => openCommandPalette("nlp")}
             class="w-full py-1.5 px-2.5 rounded-md border border-zinc-800 light:border-zinc-200 bg-zinc-900/60 light:bg-white hover:border-indigo-500/40 text-left flex items-center justify-between text-zinc-300 light:text-zinc-700 transition-colors"
           >
-            <span>⚡ Quick Add Event</span>
-            <kbd class="font-mono-tabular text-[10px] px-1 rounded bg-zinc-800 light:bg-zinc-200">
+            <span class="flex items-center gap-1.5">
+              <ZapIcon class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 light:text-amber-600 shrink-0" />
+              <span>Quick Add Event</span>
+            </span>
+            <kbd class="font-mono-tabular text-[10px] px-1 rounded bg-zinc-800 light:bg-zinc-200 text-zinc-300 light:text-zinc-600">
               C
             </kbd>
           </button>
@@ -256,9 +263,12 @@ export function LeftSidebar() {
             onClick={() => openSettings("general")}
             class="w-full py-1.5 px-2.5 rounded-md border border-zinc-800 light:border-zinc-200 bg-zinc-900/60 light:bg-white hover:border-indigo-500/40 text-left flex items-center justify-between text-zinc-300 light:text-zinc-700 transition-colors"
           >
-            <span>⚙️ Settings & Preferences</span>
-            <kbd class="font-mono-tabular text-[10px] px-1 rounded bg-zinc-800 light:bg-zinc-200">
-              ⌘,
+            <span class="flex items-center gap-1.5">
+              <SettingsIcon class="w-3.5 h-3.5 text-zinc-400 light:text-zinc-500 shrink-0" />
+              <span>Settings & Preferences</span>
+            </span>
+            <kbd class="font-mono-tabular text-[10px] px-1 rounded bg-zinc-800 light:bg-zinc-200 text-zinc-300 light:text-zinc-600">
+              {formatModKey(",")}
             </kbd>
           </button>
         </div>

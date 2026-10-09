@@ -44,7 +44,9 @@ export default function App() {
       <TopBar />
 
       <main class="flex-1 flex min-h-0 min-w-0 overflow-hidden">
-        <LeftSidebar />
+        <Show when={viewMode() !== "settings"}>
+          <LeftSidebar />
+        </Show>
 
         <Switch fallback={<TimeGridView />}>
           <Match when={viewMode() === "month"}>

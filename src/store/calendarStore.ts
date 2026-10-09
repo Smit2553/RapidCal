@@ -10,6 +10,7 @@ import type {
   Account,
   Calendar,
   CalendarViewMode,
+  GridDensity,
   OAuthConfig,
   OutboxMutation,
   SettingsTab,
@@ -22,7 +23,32 @@ import type {
 const PREFS_STORAGE_KEY = "rapidcal.preferences.v1";
 const THEME_STORAGE_KEY = "rapidcal.theme.v1";
 
-const DEFAULT_PREFERENCES: UserPreferences = {
+export const GRID_DENSITY_CONFIGS: Record<
+  "compact" | "standard" | "spacious",
+  { label: string; hourHeight: number; description: string }
+> = {
+  compact: {
+    label: "Compact",
+    hourHeight: 44,
+    description: "44px / hr · Maximum overview for dense schedules and smaller displays",
+  },
+  standard: {
+    label: "Standard",
+    hourHeight: 56,
+    description: "56px / hr · Balanced everyday readability and spacing",
+  },
+  spacious: {
+    label: "Spacious",
+    hourHeight: 72,
+    description: "72px / hr · Generous room for detailed titles, locations, and tags",
+  },
+};
+
+export const MIN_HOUR_HEIGHT = 40;
+export const MAX_HOUR_HEIGHT = 96;
+export const DEFAULT_HOUR_HEIGHT = 56;
+
+export const DEFAULT_PREFERENCES: UserPreferences = {
   defaultView: "week",
   timeFormat: "12h",
   weekStartsOn: "monday",
@@ -31,17 +57,32 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   workingHoursEnd: 17,
   showSecondaryTimezone: true,
   highlightWeekends: true,
+  platformShortcutStyle: "auto",
+  gridDensity: "standard",
+  hourHeight: DEFAULT_HOUR_HEIGHT,
 };
 
 function loadInitialPreferences(): UserPreferences {
   try {
     const raw = localStorage.getItem(PREFS_STORAGE_KEY);
     if (!raw) return DEFAULT_PREFERENCES;
-    return { ...DEFAULT_PREFERENCES, ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw);
+    const density: GridDensity = parsed.gridDensity || "standard";
+    const height =
+      typeof parsed.hourHeight === "number" && !isNaN(parsed.hourHeight)
+        ? Math.min(MAX_HOUR_HEIGHT, Math.max(MIN_HOUR_HEIGHT, parsed.hourHeight))
+        : (density === "compact" ? 44 : density === "spacious" ? 72 : DEFAULT_HOUR_HEIGHT);
+    return {
+      ...DEFAULT_PREFERENCES,
+      ...parsed,
+      gridDensity: density,
+      hourHeight: height,
+    };
   } catch {
     return DEFAULT_PREFERENCES;
   }
 }
+
 
 function loadInitialTheme(): "dark" | "light" {
   try {
@@ -163,6 +204,43 @@ export function updateUserPreferences(partial: Partial<UserPreferences>) {
     void refreshViewport();
   }
 }
+
+export const hourHeightPx = () => userPreferences().hourHeight || DEFAULT_HOUR_HEIGHT;
+
+export function setGridDensity(density: GridDensity, customHeight?: number) {
+  let height = DEFAULT_HOUR_HEIGHT;
+  if (density === "compact") height = 44;
+  else if (density === "standard") height = 56;
+  else if (density === "spacious") height = 72;
+  else if (density === "custom") {
+    const fallback = userPreferences().hourHeight || DEFAULT_HOUR_HEIGHT;
+    height = Math.min(
+      MAX_HOUR_HEIGHT,
+      Math.max(MIN_HOUR_HEIGHT, Math.round(customHeight ?? fallback))
+    );
+  }
+  updateUserPreferences({
+    gridDensity: density,
+    hourHeight: height,
+  });
+}
+
+export function setHourHeight(height: number) {
+  const clamped = Math.min(
+    MAX_HOUR_HEIGHT,
+    Math.max(MIN_HOUR_HEIGHT, Math.round(height))
+  );
+  let density: GridDensity = "custom";
+  if (clamped === 44) density = "compact";
+  else if (clamped === 56) density = "standard";
+  else if (clamped === 72) density = "spacious";
+
+  updateUserPreferences({
+    gridDensity: density,
+    hourHeight: clamped,
+  });
+}
+
 
 export async function refreshViewport() {
   const activeCalView =
@@ -483,3 +561,4 @@ export {
   viewMode,
   viewportEvents,
 };
+
