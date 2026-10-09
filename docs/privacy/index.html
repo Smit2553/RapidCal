@@ -6,7 +6,7 @@
     <title>Privacy Policy — RapidCal | CodeStacx</title>
     <meta
       name="description"
-      content="Privacy Policy for RapidCal (rapidcal.codestacx.com), including Google API Services User Data Policy Limited Use disclosures, local-first storage architecture, and data deletion instructions."
+      content="Comprehensive Privacy Policy for RapidCal (rapidcal.codestacx.com), detailing Google user data collection, usage, sharing, data protection mechanisms, encryption, data retention, deletion, and Google API Services User Data Policy Limited Use compliance."
     />
     <link rel="canonical" href="https://rapidcal.codestacx.com/privacy" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
@@ -70,15 +70,16 @@
         <aside class="legal-toc" aria-label="Table of Contents">
           <div class="legal-toc-title">On This Page</div>
           <ol>
-            <li><a href="#overview">1. Overview &amp; Local-First Design</a></li>
-            <li><a href="#data-accessed">2. Information We Access (OAuth Scopes)</a></li>
-            <li><a href="#how-we-use-data">3. How We Use Your Information</a></li>
-            <li><a href="#google-limited-use">4. Google API Limited Use Policy</a></li>
-            <li><a href="#storage-security">5. Local Data Storage &amp; Security</a></li>
-            <li><a href="#data-sharing">6. Data Sharing &amp; Cross-Account Sync</a></li>
-            <li><a href="#retention-deletion">7. Data Retention, Deletion &amp; Revocation</a></li>
-            <li><a href="#website-privacy">8. Website Privacy &amp; Cookies</a></li>
-            <li><a href="#changes-contact">9. Updates &amp; Contact Information</a></li>
+            <li><a href="#overview">1. Introduction &amp; Scope</a></li>
+            <li><a href="#data-collection">2. Data Collection &amp; Access</a></li>
+            <li><a href="#how-we-use-data">3. How We Use Google User Data</a></li>
+            <li><a href="#google-limited-use">4. Limited Use &amp; Prohibited Uses</a></li>
+            <li><a href="#data-sharing">5. Data Sharing, Transfer &amp; Disclosure</a></li>
+            <li><a href="#data-protection">6. Data Protection &amp; Encryption</a></li>
+            <li><a href="#retention-deletion">7. Data Retention &amp; Deletion</a></li>
+            <li><a href="#privacy-rights">8. Your Privacy Rights</a></li>
+            <li><a href="#website-privacy">9. Website, Cookies &amp; Children</a></li>
+            <li><a href="#changes-contact">10. Policy Updates &amp; Contact</a></li>
           </ol>
         </aside>
 
@@ -89,113 +90,236 @@
             <div class="legal-meta">
               <span>Effective Date: October 8, 2026</span>
               <span>Last Updated: October 8, 2026</span>
-              <span>Domain: rapidcal.codestacx.com</span>
+              <span>Application: RapidCal (rapidcal.codestacx.com)</span>
             </div>
           </header>
 
           <div class="callout-box emerald">
-            <div class="callout-title">Core Privacy Summary: Zero Cloud Servers</div>
+            <div class="callout-title">Privacy Commitment &amp; Google API Compliance Summary</div>
             <p style="color: var(--text-secondary); font-size: 0.92rem; margin: 0;">
-              <strong>RapidCal</strong> is a 100% local-first desktop application developed by
-              <strong>CodeStacx</strong> (<a href="https://rapidcal.codestacx.com">rapidcal.codestacx.com</a>). RapidCal
-              does <strong>not</strong> operate any cloud backend, relay server, or remote database. Your OAuth
-              credentials, calendar lists, and calendar events are transmitted directly between your personal computer
-              and Google or Microsoft APIs over HTTPS and stored exclusively on your local device.
+              <strong>RapidCal</strong> (developed and operated by <a href="https://smit.codestacx.com">CodeStacx</a> at
+              <a href="https://rapidcal.codestacx.com">rapidcal.codestacx.com</a>) is a privacy-first desktop calendar
+              application for macOS, Windows, and Linux. When you sign in with your Google Account or Microsoft Account,
+              RapidCal collects and accesses your account profile and calendar data solely to provide two-way calendar
+              synchronization, event scheduling, offline search, and meeting management on your device. Security
+              procedures and encryption are in place to protect the confidentiality of your data, and we never sell,
+              share for advertising, or use Google Workspace API data to train artificial intelligence (AI) or machine
+              learning (ML) models.
             </p>
           </div>
 
           <section id="overview" class="legal-section">
-            <h2>1. Overview &amp; Local-First Design</h2>
+            <h2>1. Introduction &amp; Scope of This Privacy Policy</h2>
             <p>
-              This Privacy Policy explains how <strong>RapidCal</strong> ("RapidCal", "we", "us", or "our"), operated by
-              <strong>CodeStacx</strong>, accesses, uses, stores, and protects information when you use the RapidCal
-              desktop application (for macOS, Windows, and Linux) or visit our website at
+              This Privacy Policy describes how <strong>RapidCal</strong> ("RapidCal", "we", "us", or "our"), developed
+              and operated by <a href="https://smit.codestacx.com">CodeStacx</a>, collects, accesses, uses, stores,
+              protects, retains, and deletes your personal information and Google user data when you use the RapidCal
+              desktop application or visit our official website at
               <a href="https://rapidcal.codestacx.com">https://rapidcal.codestacx.com</a>.
             </p>
             <p>
-              Unlike traditional cloud-backed calendar clients that ingest a copy of your calendar onto proprietary
-              servers, RapidCal executes entirely on your local device. When you connect a Google Calendar or Microsoft
-              Outlook / Microsoft 365 account, your computer authenticates directly with Google or Microsoft via an
-              RFC 8252 loopback OAuth 2.0 + PKCE flow (<code>http://127.0.0.1</code>). CodeStacx never receives, views,
-              or stores your calendar data or OAuth tokens on any external server.
+              By downloading, installing, or using RapidCal, or by connecting your Google Account or Microsoft Account
+              to RapidCal via OAuth 2.0, you acknowledge that you have read and understood the data collection, usage,
+              protection, and retention practices detailed in this Privacy Policy.
             </p>
           </section>
 
-          <section id="data-accessed" class="legal-section">
-            <h2>2. Information We Access (OAuth Scopes)</h2>
+          <section id="data-collection" class="legal-section">
+            <h2>2. What Personal Information and Google User Data We Collect and Access</h2>
             <p>
-              RapidCal only accesses user data after you explicitly initiate an OAuth 2.0 sign-in flow and grant
-              consent through Google's or Microsoft's official authorization screen. Specifically, RapidCal requests the
-              following scopes:
+              When you sign up for and open an account with us, or when you connect a calendar account in RapidCal using
+              Google Sign-In (OAuth 2.0) or Microsoft Sign-In, we ask you to provide us with certain personal
+              information such as your name and email address, and to authorize RapidCal to collect and access your
+              calendar data from Google APIs or Microsoft Graph APIs.
+            </p>
+            <p>
+              RapidCal only collects and accesses Google user data after you explicitly grant consent on Google's
+              official OAuth 2.0 authorization screen. Below is the complete list of personal information and Google
+              user data that RapidCal collects and accesses:
             </p>
 
-            <h3>2.1 Google Account &amp; Google Calendar Data</h3>
+            <h3>2.1 Google Account Identity &amp; Profile Information</h3>
             <ul>
               <li>
-                <strong>Basic Profile &amp; Email (<code>openid</code>, <code>email</code>, <code>profile</code> via
-                <code>https://www.googleapis.com/oauth2/v2/userinfo</code>):</strong> We access your email address,
-                display name, and profile picture URL solely to display your connected account identity inside the
-                RapidCal sidebar and account switcher.
+                <strong>OAuth Scopes Requested:</strong> <code>openid</code>, <code>email</code>, <code>profile</code>
+                (accessed via <code>https://www.googleapis.com/oauth2/v2/userinfo</code>).
               </li>
               <li>
-                <strong>Google Calendar Read/Write Access (<code>https://www.googleapis.com/auth/calendar</code>):</strong>
-                We access your Google Calendar list (calendar IDs, titles, color swatches, timezones, and access roles)
-                and calendar events (titles, descriptions, start/end times, timezones, recurrence rules
-                [<code>RRULE</code>], locations, video conference join URLs such as Google Meet, attendee email
-                addresses, and RSVP statuses).
+                <strong>Personal Data Collected:</strong> Your Google Account email address, full name / display name,
+                unique Google account identifier (<code>sub</code> / user ID), and profile picture URL.
+              </li>
+              <li>
+                <strong>How It Is Collected:</strong> Retrieved directly over HTTPS when you authenticate your Google
+                Account via OAuth 2.0 with PKCE (`S256`) and stored locally in the RapidCal application database so you
+                can identify and switch between multiple connected calendar accounts.
               </li>
             </ul>
 
-            <h3>2.2 Microsoft Outlook / Microsoft 365 Data</h3>
+            <h3>2.2 Google Calendar Data (Sensitive Scopes)</h3>
             <ul>
               <li>
-                <strong>Basic Profile (<code>openid</code>, <code>profile</code>, <code>email</code>,
-                <code>User.Read</code> via <code>https://graph.microsoft.com/v1.0/me</code>):</strong> We access your
-                display name and email address / user principal name to identify your connected Microsoft account in the
-                application.
+                <strong>OAuth Scopes Requested:</strong>
+                <code>https://www.googleapis.com/auth/calendar</code> (which encompasses read and write access to your
+                calendars and calendar events, equivalent to
+                <code>https://www.googleapis.com/auth/calendar.readonly</code> and
+                <code>https://www.googleapis.com/auth/calendar.events</code>).
               </li>
               <li>
-                <strong>Calendar Read/Write &amp; Offline Access (<code>Calendars.ReadWrite</code>,
-                <code>offline_access</code>):</strong> We access your Outlook / Microsoft 365 calendars and calendar
-                events to perform two-way synchronization and event management on your device.
+                <strong>Calendar Metadata Collected:</strong> Your Google Calendar list, including calendar IDs,
+                calendar summary titles, descriptions, color codes, primary calendar flags, timezones, and your access
+                role (`owner`, `writer`, `reader`, `freeBusyReader`).
+              </li>
+              <li>
+                <strong>Calendar Event Data Collected:</strong> For calendars you synchronize in RapidCal, we collect
+                and store event records locally on your device, including:
+                <ul>
+                  <li>Event identifiers (<code>id</code>, <code>iCalUID</code>, <code>etag</code>) and status (<code>confirmed</code>, <code>tentative</code>, <code>cancelled</code>);</li>
+                  <li>Event titles (summaries) and text/HTML descriptions or meeting notes;</li>
+                  <li>Start times, end times, all-day date flags, and IANA timezone identifiers;</li>
+                  <li>Recurrence rules (<code>RRULE</code>, <code>EXDATE</code>, <code>RDATE</code>) and recurring event series linkage;</li>
+                  <li>Physical event locations and virtual video conference join URLs (such as Google Meet, Zoom, Microsoft Teams, or Webex links);</li>
+                  <li>Event organizer and attendee details (display names, email addresses, optional/required flags, and RSVP response statuses: <code>accepted</code>, <code>declined</code>, <code>tentative</code>, <code>needsAction</code>);</li>
+                  <li>Visibility, transparency (busy vs. free), and reminder settings.</li>
+                </ul>
+              </li>
+            </ul>
+
+            <h3>2.3 OAuth 2.0 Authentication Credentials</h3>
+            <ul>
+              <li>
+                <strong>Authentication Tokens Collected:</strong> OAuth 2.0 access tokens, refresh tokens, token scopes,
+                and token expiration timestamps issued by Google (<code>https://oauth2.googleapis.com/token</code>) or
+                Microsoft (<code>https://login.microsoftonline.com/common/oauth2/v2.0/token</code>).
+              </li>
+              <li>
+                <strong>How Tokens Are Collected &amp; Stored:</strong> Tokens are exchanged directly between your
+                desktop device and the identity provider using RFC 8252 loopback redirection
+                (<code>http://127.0.0.1</code>) with Proof Key for Code Exchange (PKCE) and stored encrypted on your
+                device.
+              </li>
+            </ul>
+
+            <h3>2.4 Microsoft Outlook / Microsoft 365 Account Data (Optional)</h3>
+            <ul>
+              <li>
+                <strong>OAuth Scopes Requested:</strong> <code>openid</code>, <code>profile</code>, <code>email</code>,
+                <code>User.Read</code>, <code>Calendars.ReadWrite</code>, and <code>offline_access</code> via Microsoft
+                Graph (<code>https://graph.microsoft.com/v1.0</code>).
+              </li>
+              <li>
+                <strong>Data Collected:</strong> Your Microsoft display name, email address / user principal name,
+                calendar metadata, and calendar events for two-way synchronization within RapidCal.
+              </li>
+            </ul>
+
+            <h3>2.5 Application Preferences &amp; Voluntary Support Communications</h3>
+            <ul>
+              <li>
+                <strong>Local Application Settings:</strong> User interface preferences such as your default calendar
+                view (Week, Month, Agenda), timezone preferences, working hours, theme settings, and cross-account busy
+                block rules.
+              </li>
+              <li>
+                <strong>Support Communications:</strong> If you contact us via email at
+                <a href="mailto:support@codestacx.com">support@codestacx.com</a> or submit a GitHub issue, we collect
+                your name, email address, and any message or diagnostic information you voluntarily include so we can
+                respond to your inquiry.
               </li>
             </ul>
           </section>
 
           <section id="how-we-use-data" class="legal-section">
-            <h2>3. How We Use Your Information</h2>
+            <h2>3. How We Use Google User Data and Personal Information</h2>
             <p>
-              All data retrieved from Google APIs and Microsoft Graph APIs is processed strictly locally on your
-              computer to provide the user-facing features of the RapidCal desktop calendar:
+              We use the Google user data and personal information we collect and access solely to provide, operate, and
+              maintain the user-facing calendar management features of RapidCal that you explicitly request:
             </p>
+
+            <div class="scope-table-wrap">
+              <table class="scope-table">
+                <thead>
+                  <tr>
+                    <th>Data Category / Scope</th>
+                    <th>Specific Purpose &amp; How RapidCal Uses the Data</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <strong>Google Account Profile &amp; Email</strong><br />
+                      <code>openid</code>, <code>email</code>, <code>profile</code>
+                    </td>
+                    <td>
+                      Used to authenticate your session, display your connected email address, name, and avatar in the
+                      RapidCal sidebar and Settings view, distinguish between multiple connected accounts, and determine
+                      your RSVP identity within calendar event attendee lists.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong>Google Calendar Metadata &amp; Events</strong><br />
+                      <code>https://www.googleapis.com/auth/calendar</code>
+                    </td>
+                    <td>
+                      Used to synchronize and render your calendars and events in RapidCal's Day, Week, Multi-Day,
+                      Month, and Agenda views; index event titles, descriptions, attendees, and locations in a local
+                      SQLite FTS5 database for instant offline search; create, edit, reschedule, and delete events on
+                      your Google Calendar when you perform those actions in RapidCal; update your RSVP status
+                      (<code>Yes</code> / <code>Maybe</code> / <code>No</code>) on meeting invitations; extract video
+                      conference join URLs for one-key meeting launch; and create user-configured <code>[Busy]</code>
+                      availability blocks across your connected accounts.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong>OAuth 2.0 Access &amp; Refresh Tokens</strong>
+                    </td>
+                    <td>
+                      Used exclusively to authenticate direct HTTPS API requests from your computer to Google Calendar
+                      APIs and Microsoft Graph APIs for background delta synchronization
+                      (<code>nextSyncToken</code> / <code>@odata.deltaLink</code>) and offline outbox mutation replay
+                      without requiring you to sign in repeatedly.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p>Specifically, your data is used for the following core application functions:</p>
             <ul>
               <li>
-                <strong>Local Calendar Rendering &amp; Offline Search:</strong> Indexing your calendars and events in a
-                local SQLite database (with SQLite FTS5 full-text search) on your device so you can browse, search, and
-                inspect your schedule offline with sub-millisecond latency.
+                <strong>Account Authentication &amp; Multi-Account Management:</strong> Identifying your connected
+                Google and Microsoft accounts within the desktop client and associating each calendar and event with its
+                owning account.
               </li>
               <li>
-                <strong>Two-Way Event Synchronization:</strong> Performing incremental synchronization using Google
-                Calendar's <code>nextSyncToken</code> and Microsoft Graph's <code>@odata.deltaLink</code>, and pushing
-                events you create, edit, reschedule, or delete in RapidCal back to your connected calendar provider.
+                <strong>Two-Way Calendar Synchronization:</strong> Fetching incremental changes from Google Calendar API
+                v3 using sync tokens (<code>nextSyncToken</code>) and pushing events you create, modify, move, or delete
+                in RapidCal back to Google Calendar.
               </li>
               <li>
-                <strong>Meeting &amp; RSVP Management:</strong> Allowing you to accept, tentatively accept, or decline
-                meeting invitations (<code>Yes</code> / <code>Maybe</code> / <code>No</code>) and launch video
-                conferencing links (Google Meet, Microsoft Teams, Zoom, Webex) with a single keyboard shortcut.
+                <strong>Local Offline Caching &amp; Instant Search:</strong> Storing your synchronized calendar list and
+                event instances in a local SQLite database on your workstation so you can view your schedule and run
+                full-text searches even when disconnected from the internet.
               </li>
               <li>
-                <strong>User-Configured Cross-Account Busy Blocking:</strong> When explicitly triggered by you,
-                mirroring an event's time window as a redacted <code>[Busy]</code> block onto another calendar account
-                you have connected to RapidCal so your availability stays accurate across work and personal calendars.
+                <strong>Meeting RSVP &amp; Conferencing Integration:</strong> Updating your attendee response status on
+                invitations and parsing conference metadata (such as Google Meet links) so you can join upcoming calls
+                directly from the application.
+              </li>
+              <li>
+                <strong>User-Configured Cross-Account Busy Blocking:</strong> When you explicitly enable cross-account
+                busy blocking between two of your connected accounts, RapidCal reads the start and end time of an event
+                on your source calendar and writes a redacted <code>[Busy]</code> placeholder event to your target
+                calendar so your availability remains accurate across work and personal schedules.
               </li>
             </ul>
           </section>
 
           <section id="google-limited-use" class="legal-section">
-            <h2>4. Google API Services User Data Policy &amp; Limited Use Compliance</h2>
+            <h2>4. Google API Services User Data Policy, Limited Use &amp; Prohibited Uses</h2>
             <div class="callout-box">
-              <div class="callout-title">Mandatory Google API Limited Use Affirmation</div>
+              <div class="callout-title">Google API Services User Data Policy — Limited Use Disclosure</div>
               <p style="color: var(--text-primary); font-size: 0.94rem; margin: 0;">
                 RapidCal's use and transfer to any other app of information received from Google APIs will adhere to the
                 <a
@@ -206,108 +330,219 @@
                 >, including the Limited Use requirements.
               </p>
             </div>
-            <p>In strict accordance with Google's Limited Use requirements, RapidCal guarantees that:</p>
-            <ul>
-              <li>
-                <strong>No Third-Party Selling or Transfers:</strong> RapidCal never sells, rents, licenses, trades, or
-                transfers your Google user data to any third party, data broker, or analytics platform.
-              </li>
-              <li>
-                <strong>No Advertising Use:</strong> RapidCal never uses Google user data for serving advertisements,
-                personalized advertising, retargeting, or interest-based profiling.
-              </li>
-              <li>
-                <strong>No AI or Machine Learning Model Training:</strong> RapidCal never uses your Google Calendar
-                events, descriptions, attendees, or profile information to train, fine-tune, or improve artificial
-                intelligence (AI) or machine learning (ML) models.
-              </li>
-              <li>
-                <strong>No Human Access:</strong> Because all Google user data is stored exclusively on your local
-                workstation and never transmitted to CodeStacx servers, no employee, contractor, or developer at
-                CodeStacx can view or read your Google user data unless you explicitly share diagnostic details with us
-                while requesting technical support, or where strictly required by applicable law.
-              </li>
-            </ul>
-          </section>
 
-          <section id="storage-security" class="legal-section">
-            <h2>5. Local Data Storage &amp; Security Measures</h2>
+            <h3>4.1 Explicit AI / ML Model Training Prohibition (Google Workspace APIs)</h3>
             <p>
-              RapidCal implements defense-in-depth security controls on your local machine to safeguard your calendar
-              data and authentication credentials:
+              <strong>
+                RapidCal explicitly affirms that Google Workspace APIs and Google user data are NOT used to develop,
+                improve, or train generalized or non-personalized artificial intelligence (AI) and/or machine learning
+                (ML) models.
+              </strong>
+              We never feed your Google Calendar events, descriptions, summaries, attendee lists, or account profile
+              information into any foundation model, large language model (LLM), or third-party AI training pipeline.
+            </p>
+
+            <h3>4.2 Strict Verification Against Unauthorized Uses</h3>
+            <p>
+              In strict compliance with Google's Limited Use requirements, RapidCal verifies and guarantees that we do
+              <strong>not</strong> use, transfer, sell, or disclose Google user data for any of the following
+              unauthorized purposes:
             </p>
             <ul>
-              <li>
-                <strong>In-Transit Encryption (TLS):</strong> All network communication between the RapidCal desktop
-                application and Google APIs (<code>*.googleapis.com</code>) or Microsoft Graph APIs
-                (<code>graph.microsoft.com</code>, <code>login.microsoftonline.com</code>) is encrypted via HTTPS/TLS
-                using <code>rustls</code>.
-              </li>
-              <li>
-                <strong>Native OS Keychain Storage:</strong> OAuth 2.0 access tokens and refresh tokens are stored in
-                your operating system's native hardware-backed credential manager—<strong>macOS Keychain</strong>,
-                <strong>Windows Credential Manager</strong>, or <strong>Linux Secret Service (libsecret)</strong>—under
-                the application identifier <code>dev.rapidcal.desktop</code>.
-              </li>
-              <li>
-                <strong>AES-256-GCM Encrypted Credential Vault:</strong> For headless or offline Linux/desktop
-                environments where an OS keyring daemon may be unavailable, token sets are encrypted at rest using
-                authenticated <strong>AES-256-GCM</strong> encryption with a unique cryptographic nonce before being
-                stored locally.
-              </li>
-              <li>
-                <strong>Local SQLite Database:</strong> Calendar metadata and event instances are stored locally within
-                your OS user profile's application data directory.
-              </li>
+              <li><strong>Targeted advertising:</strong> We never use Google user data for targeted advertising.</li>
+              <li><strong>Selling to data brokers:</strong> We never sell, license, or trade Google user data to data brokers.</li>
+              <li><strong>Providing to information resellers:</strong> We never provide or disclose Google user data to information resellers.</li>
+              <li><strong>Determining credit-worthiness:</strong> We never use Google user data to determine credit-worthiness.</li>
+              <li><strong>Lending purposes:</strong> We never use Google user data for lending decisions or financial underwriting.</li>
+              <li><strong>User advertisements:</strong> We never serve user advertisements based on Google user data.</li>
+              <li><strong>Personalized advertisements:</strong> We never use Google user data for personalized advertisements.</li>
+              <li><strong>Retargeted advertisements:</strong> We never use Google user data for retargeted advertisements.</li>
+              <li><strong>Interest-based advertisements:</strong> We never use Google user data for interest-based advertising or behavioral profiling.</li>
+              <li><strong>Creating external databases:</strong> We never aggregate or export Google user data to create external, commercial, or third-party databases.</li>
+              <li><strong>Training non-personalized or generalized AI and/or ML models:</strong> We never use Google user data or Google Workspace APIs to train, fine-tune, or improve non-personalized or generalized AI and/or ML models.</li>
             </ul>
+
+            <h3>4.3 Restrictions on Human Access to Google User Data</h3>
+            <p>
+              No human at CodeStacx reads or views your Google user data unless: (a) we first obtain your explicit,
+              affirmative consent to inspect specific diagnostic information to troubleshoot a support issue you
+              reported; (b) it is strictly necessary for security purposes such as investigating a security vulnerability
+              or abuse; or (c) it is required to comply with applicable law. Because RapidCal stores your calendar data
+              locally on your own computer rather than on CodeStacx servers, CodeStacx personnel have no technical
+              access to your calendar database or OAuth tokens during normal operation.
+            </p>
           </section>
 
           <section id="data-sharing" class="legal-section">
-            <h2>6. Data Sharing &amp; Cross-Account Sync</h2>
+            <h2>5. How We Share, Transfer, or Disclose Google User Data</h2>
             <p>
-              CodeStacx does not share your personal information with any third parties. Your data only leaves your
-              device in the following user-initiated scenarios:
+              <strong>
+                We do not transfer or disclose your information to third parties for purposes other than the ones
+                provided in this Privacy Policy.
+              </strong>
+              We do not sell, rent, or trade your personal information or Google user data to any third party.
+            </p>
+            <p>
+              Your data is transmitted or disclosed only in the following strictly limited, user-authorized
+              circumstances:
             </p>
             <ul>
               <li>
-                <strong>Direct Sync with Your Calendar Provider:</strong> When you create, modify, RSVP to, or delete
-                an event in RapidCal, those changes are sent directly to the Google Calendar or Microsoft Outlook
-                account that owns that calendar.
+                <strong>Direct Communication with Google APIs and Microsoft Graph APIs:</strong> When you create, edit,
+                reschedule, RSVP to, or delete a calendar event in RapidCal, the application transmits those updates
+                directly from your device over encrypted HTTPS to Google (<code>www.googleapis.com</code>) or Microsoft
+                (<code>graph.microsoft.com</code>) to synchronize the changes with your own calendar account and notify
+                meeting attendees you have invited.
               </li>
               <li>
-                <strong>Cross-Account Busy Blocking (Optional):</strong> If you explicitly use RapidCal's
-                <em>Busy Block</em> feature to mirror an event from Account A (e.g., personal Google Calendar) to
-                Account B (e.g., work Microsoft Outlook or secondary Google Calendar), RapidCal writes a redacted
-                <code>[Busy]</code> block containing only the start and end timestamps (omitting private descriptions
-                and attendee lists) to Account B.
+                <strong>User-Initiated Cross-Account Busy Blocking:</strong> If you connect multiple calendar accounts
+                to RapidCal (for example, a personal Google Calendar and a work Google or Microsoft Calendar) and
+                explicitly trigger RapidCal's <em>Busy Block</em> feature, RapidCal writes a redacted
+                <code>[Busy]</code> block containing only the event start and end times (excluding private event
+                descriptions and attendee lists) to the destination calendar account you selected.
+              </li>
+              <li>
+                <strong>Legal Requirements &amp; Protection of Rights:</strong> We may disclose information if required
+                to do so by law or in the good-faith belief that such action is necessary to comply with a valid legal
+                obligation, court order, or governmental request, or to protect the security, rights, or property of
+                CodeStacx, our users, or the public. Note that because calendar events and OAuth tokens are stored
+                exclusively on your local device and not on CodeStacx servers, CodeStacx does not possess copies of your
+                calendar contents.
+              </li>
+            </ul>
+          </section>
+
+          <section id="data-protection" class="legal-section">
+            <h2>6. Data Protection Mechanisms for Sensitive Data</h2>
+            <p>
+              <strong>Security procedures are in place to protect the confidentiality of your data.</strong>
+              <strong>We use encryption to protect your information</strong> both in transit over the network and at
+              rest on your local device. RapidCal implements defense-in-depth technical, cryptographic, and
+              architectural safeguards designed specifically to protect sensitive Google Calendar and OAuth credential
+              data:
+            </p>
+            <ul>
+              <li>
+                <strong>Encryption in Transit (HTTPS / TLS 1.2 &amp; TLS 1.3):</strong> All network communications
+                between RapidCal and Google APIs (<code>oauth2.googleapis.com</code>, <code>www.googleapis.com</code>)
+                or Microsoft APIs (<code>login.microsoftonline.com</code>, <code>graph.microsoft.com</code>) are
+                encrypted in transit using industry-standard Transport Layer Security (TLS 1.2 / TLS 1.3) enforced via
+                <code>rustls</code> with strict certificate validation. Plaintext HTTP connections to remote APIs are
+                never permitted.
+              </li>
+              <li>
+                <strong>Encryption at Rest in Native OS Hardware-Backed Keychains:</strong> Sensitive OAuth 2.0 access
+                tokens and refresh tokens are never stored in plaintext configuration files or unencrypted SQLite
+                tables. RapidCal stores your credentials inside your operating system's native, encrypted credential
+                manager under the service identifier <code>dev.rapidcal.desktop</code>:
+                <ul>
+                  <li><strong>macOS:</strong> Apple Keychain Services (protected by Secure Enclave / user login keychain encryption).</li>
+                  <li><strong>Windows:</strong> Windows Credential Manager (protected by Windows Data Protection API / DPAPI).</li>
+                  <li><strong>Linux:</strong> Freedesktop Secret Service API / <code>libsecret</code> (GNOME Keyring or KDE KWallet).</li>
+                </ul>
+              </li>
+              <li>
+                <strong>AES-256-GCM Authenticated Encryption Vault:</strong> In desktop or headless Linux environments
+                where an OS D-Bus Secret Service keyring daemon is unavailable, RapidCal automatically encrypts all
+                OAuth token payloads at rest using authenticated <strong>AES-256-GCM</strong> (256-bit Advanced
+                Encryption Standard in Galois/Counter Mode) with a cryptographically random 96-bit nonce per encryption
+                operation and strict owner-only file permissions.
+              </li>
+              <li>
+                <strong>OAuth 2.0 Loopback with PKCE (Proof Key for Code Exchange):</strong> RapidCal authenticates
+                directly with Google and Microsoft using RFC 8252 loopback redirection (<code>http://127.0.0.1</code>)
+                paired with cryptographic <code>S256</code> PKCE code challenges and anti-CSRF <code>state</code>
+                verification tokens, preventing authorization code interception attacks.
+              </li>
+              <li>
+                <strong>Zero-Server Local Isolation:</strong> Unlike cloud-intermediary calendar apps that store copies
+                of every user's calendar in a centralized multi-tenant cloud database, RapidCal stores your synchronized
+                calendar events exclusively within your local OS user profile's application data directory. This
+                eliminates the risk of centralized server data breaches exposing your calendar events or OAuth tokens.
               </li>
             </ul>
           </section>
 
           <section id="retention-deletion" class="legal-section">
-            <h2>7. Data Retention, Deletion &amp; Revoking Access</h2>
+            <h2>7. Data Retention and Deletion of Google User Data</h2>
             <p>
-              Because all data resides on your computer, you have complete, immediate control over its retention and
-              deletion at any time:
+              <strong>
+                We retain your personal information for the length of time needed to fulfill the purposes outlined in
+                this privacy policy unless a longer retention period is required or permitted by law. When the data
+                retention period expires for a given type of data, we will delete or destroy it.
+              </strong>
+            </p>
+
+            <h3>7.1 Data Retention Schedule</h3>
+            <div class="scope-table-wrap">
+              <table class="scope-table">
+                <thead>
+                  <tr>
+                    <th>Data Type</th>
+                    <th>Storage Location</th>
+                    <th>Retention Period &amp; Expiration</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Google &amp; Microsoft OAuth Tokens</strong></td>
+                    <td>OS Keychain / AES-256-GCM Encrypted Vault on your device</td>
+                    <td>
+                      Retained only while your account remains connected in RapidCal. Immediately and permanently
+                      deleted the moment you disconnect your account or uninstall RapidCal.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Google Account Profile &amp; Calendar Events</strong></td>
+                    <td>Local SQLite Database on your device</td>
+                    <td>
+                      Retained locally while your account is connected so you can view and search your calendar offline.
+                      Events deleted in Google Calendar are automatically removed during incremental sync, and all
+                      account records are immediately purged when you disconnect the account.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Support Emails &amp; Inquiries</strong></td>
+                    <td>CodeStacx Support Inbox (<code>support@codestacx.com</code>)</td>
+                    <td>
+                      Retained only for the duration necessary to resolve your support request and deleted upon your
+                      request or after resolution, unless required by applicable law.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3>7.2 How to Delete Your Data and Revoke Access</h3>
+            <p>
+              You have full, immediate control to delete all Google user data collected by RapidCal and revoke OAuth
+              permissions at any time using any of the following methods:
             </p>
             <ul>
               <li>
-                <strong>Disconnecting an Account in RapidCal:</strong> Open <strong>Settings &rarr; Accounts</strong>
-                inside RapidCal and click <strong>Disconnect</strong> next to any linked Google or Microsoft account.
-                RapidCal immediately deletes the stored OAuth access and refresh tokens from your OS Keychain and
-                encrypted vault, and purges all calendars, events, FTS5 search indexes, and pending outbox mutations
-                associated with that account from your local SQLite database.
+                <strong>Method 1 — Instant In-App Account Disconnection &amp; Data Purge:</strong>
+                Open RapidCal, navigate to <strong>Settings &rarr; Accounts</strong>, and click
+                <strong>Disconnect</strong> next to your Google or Microsoft account. RapidCal immediately:
+                <ol>
+                  <li>Deletes your OAuth 2.0 access token and refresh token from your OS Keychain and AES-256-GCM encrypted credential vault;</li>
+                  <li>Deletes your account profile (email address, display name, avatar) from the local SQLite database;</li>
+                  <li>Permanently deletes all synchronized calendars, calendar events, recurrence rules, attendee records, FTS5 full-text search index entries, and queued offline mutations associated with that account.</li>
+                </ol>
               </li>
               <li>
-                <strong>Uninstalling the Application:</strong> Uninstalling RapidCal and removing its local application
-                data folder permanently erases all local databases, preferences, and cached events from your machine.
+                <strong>Method 2 — Uninstalling RapidCal &amp; Removing Local Storage:</strong>
+                Uninstalling the RapidCal desktop application and deleting its local application data directory
+                (<code>dev.rapidcal.desktop</code> in your operating system's standard AppData / Application Support /
+                XDG data directory) permanently destroys all locally stored databases, caches, and settings on your
+                computer.
               </li>
               <li>
-                <strong>Revoking OAuth Permissions from Google or Microsoft:</strong> You can independently revoke
-                RapidCal's OAuth token access at any time from your provider's security dashboard:
+                <strong>Method 3 — Revoking OAuth Access via Google or Microsoft Security Settings:</strong>
+                You can directly revoke RapidCal's authorization to access your Google Account or Microsoft Account at
+                any time from your provider's official security portal:
                 <ul>
                   <li>
-                    <strong>Google Account Permissions:</strong>
+                    <strong>Google Third-Party App Permissions:</strong>
                     <a
                       href="https://myaccount.google.com/permissions"
                       target="_blank"
@@ -326,51 +561,81 @@
                   </li>
                 </ul>
               </li>
+              <li>
+                <strong>Method 4 — Requesting Data Deletion via Email:</strong>
+                If you have corresponded with our support team or wish to request deletion of any personal information
+                or support records held by CodeStacx, send an email to
+                <a href="mailto:support@codestacx.com">support@codestacx.com</a> with the subject line
+                <em>"Data Deletion Request"</em>. We will process and confirm the permanent deletion of your information
+                within 7 business days (and always within the timeframe required by applicable privacy laws).
+              </li>
+            </ul>
+          </section>
+
+          <section id="privacy-rights" class="legal-section">
+            <h2>8. Your Privacy Rights (GDPR, UK GDPR, CCPA/CPRA &amp; Global Privacy Laws)</h2>
+            <p>
+              Depending on your jurisdiction, including the European Economic Area (EEA), the United Kingdom,
+              Switzerland, California, and other US states, you have specific statutory rights regarding your personal
+              information:
+            </p>
+            <ul>
+              <li><strong>Right of Access &amp; Portability:</strong> You can inspect all calendar and profile data stored by RapidCal directly within the application and its local SQLite database on your device.</li>
+              <li><strong>Right to Rectification:</strong> You can edit or update your calendar events directly within RapidCal or in Google Calendar / Microsoft Outlook.</li>
+              <li><strong>Right to Erasure ("Right to Be Forgotten"):</strong> You can immediately erase all collected Google user data by clicking <strong>Disconnect</strong> in RapidCal Settings or by contacting <a href="mailto:support@codestacx.com">support@codestacx.com</a>.</li>
+              <li><strong>Right to Withdraw Consent:</strong> Since RapidCal processes your Google user data based on your explicit consent via Google OAuth 2.0, you may withdraw your consent at any time by disconnecting your account in RapidCal or revoking access at <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">https://myaccount.google.com/permissions</a>.</li>
+              <li><strong>Right to Non-Discrimination &amp; No Sale of Personal Information:</strong> We do not sell or share your personal information for cross-context behavioral advertising, and we never discriminate against users who exercise their privacy rights.</li>
             </ul>
           </section>
 
           <section id="website-privacy" class="legal-section">
-            <h2>8. Website Privacy, Cookies &amp; Children's Privacy</h2>
+            <h2>9. Website Privacy, Cookies &amp; Children's Privacy</h2>
             <ul>
               <li>
-                <strong>No Tracking Cookies:</strong> Our public website at
-                <a href="https://rapidcal.codestacx.com">rapidcal.codestacx.com</a> is a static informational site. We
-                do not use advertising cookies, cross-site tracking pixels, or behavioral fingerprinting. Standard,
-                short-lived web server access logs (such as IP address and browser user-agent) may be processed by our
-                hosting infrastructure solely for DDoS mitigation and security reliability.
+                <strong>Static Website &amp; No Tracking Cookies:</strong> Our public website at
+                <a href="https://rapidcal.codestacx.com">https://rapidcal.codestacx.com</a> is an informational static
+                site. We do not use advertising cookies, third-party analytics trackers, cross-site tracking pixels, or
+                behavioral fingerprinting. Standard, short-lived web server access logs (such as IP address, request
+                timestamp, and browser user-agent header) are processed solely to maintain network security, prevent
+                denial-of-service abuse, and deliver static web pages.
               </li>
               <li>
                 <strong>Children's Privacy:</strong> RapidCal is not directed to children under the age of 13 (or the
-                applicable age of digital consent in your jurisdiction), and we do not knowingly collect personal
-                information from children.
+                applicable minimum age of digital consent in your jurisdiction). We do not knowingly collect personal
+                information from children under 13. If you believe a child has provided personal information to us,
+                please contact us at <a href="mailto:support@codestacx.com">support@codestacx.com</a> and we will
+                promptly delete such information.
               </li>
             </ul>
           </section>
 
           <section id="changes-contact" class="legal-section">
-            <h2>9. Policy Updates &amp; Contact Information</h2>
+            <h2>10. Changes to This Privacy Policy &amp; Contact Information</h2>
             <p>
-              We may update this Privacy Policy from time to time to reflect new features, regulatory requirements, or
-              Google/Microsoft API policy updates. Whenever we make changes, we will update the "Last Updated" date at
-              the top of this page.
+              We may update this Privacy Policy from time to time to reflect changes in RapidCal's features, security
+              practices, legal requirements, or Google and Microsoft API policies. When we make changes, we will revise
+              the "Last Updated" date at the top of this page and publish the updated policy at
+              <a href="https://rapidcal.codestacx.com/privacy">https://rapidcal.codestacx.com/privacy</a>. We will never
+              materially expand the way we use or share your Google user data without first notifying you and obtaining
+              your affirmative consent.
             </p>
             <p>
-              If you have any questions about this Privacy Policy, RapidCal's OAuth data handling, or your privacy
-              rights, please contact us at:
+              If you have any questions, concerns, or requests regarding this Privacy Policy, our data collection and
+              usage practices, or our compliance with the Google API Services User Data Policy, please contact us:
             </p>
             <ul>
               <li>
-                <strong>Organization:</strong> <a href="https://smit.codestacx.com">CodeStacx</a> (<a
+                <strong>Developer / Organization:</strong> <a href="https://smit.codestacx.com">CodeStacx</a> (<a
                   href="https://rapidcal.codestacx.com"
                   >rapidcal.codestacx.com</a
                 >)
               </li>
               <li>
-                <strong>Email:</strong>
+                <strong>Privacy &amp; Support Email:</strong>
                 <a href="mailto:support@codestacx.com">support@codestacx.com</a>
               </li>
               <li>
-                <strong>GitHub Issue Tracker:</strong>
+                <strong>GitHub Repository &amp; Issue Tracker:</strong>
                 <a
                   href="https://github.com/Smit2553/RapidCal/issues"
                   target="_blank"
