@@ -1,6 +1,6 @@
 [package]
 name = "rapidcal"
-version = "0.1.0"
+version = "0.1.1"
 description = "Blazingly fast cross-platform desktop calendar in Rust with Google & Microsoft Outlook sync"
 authors = ["RapidCal Team"]
 edition = "2021"

@@ -475,7 +475,7 @@ export function SettingsView() {
         <div class="pt-4 border-t border-zinc-800/80 light:border-zinc-200 space-y-2.5">
           <div class="px-1 flex items-center justify-between text-[11px]">
             <span class="text-zinc-500 font-mono">
-              RapidCal v{updateCheckResult()?.currentVersion || "0.1.0"}
+              RapidCal v{updateCheckResult()?.currentVersion || "0.1.1"}
             </span>
             <Show
               when={updateCheckResult()?.updateAvailable}
@@ -891,7 +891,7 @@ export function SettingsView() {
                       Installed Version
                     </div>
                     <div class="font-mono font-semibold text-zinc-200 light:text-zinc-800 mt-0.5">
-                      v{updateCheckResult()?.currentVersion || "0.1.0"}
+                      v{updateCheckResult()?.currentVersion || "0.1.1"}
                     </div>
                   </div>
                   <div class="p-3 rounded-lg border border-zinc-800/80 light:border-zinc-200 bg-zinc-900/50 light:bg-white">
@@ -899,7 +899,7 @@ export function SettingsView() {
                       Latest GitHub Release
                     </div>
                     <div class="font-mono font-semibold text-zinc-200 light:text-zinc-800 mt-0.5">
-                      v{updateCheckResult()?.latestVersion || "0.1.0"}
+                      v{updateCheckResult()?.latestVersion || "0.1.1"}
                     </div>
                   </div>
                   <div class="p-3 rounded-lg border border-zinc-800/80 light:border-zinc-200 bg-zinc-900/50 light:bg-white">

@@ -1502,7 +1502,7 @@ export const api = {
     if (isTauriRuntime())
       return invoke<UpdateCheckResult>("check_for_updates");
 
-    const currentVersion = "0.1.0";
+    const currentVersion = "0.1.1";
     try {
       const resp = await fetch(
         "https://api.github.com/repos/Smit2553/RapidCal/releases/latest",

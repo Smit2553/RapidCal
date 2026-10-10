@@ -166,6 +166,11 @@ jobs:
 
             Lightweight, offline-first cross-platform desktop calendar engineered in Rust (Tauri v2) and SolidJS.
 
+            ### What's New in v__VERSION__
+            - **Fixed macOS Apple Silicon (`aarch64.dmg`) Installer**: Resolved the `"RapidCal is damaged and can't be opened"` Gatekeeper error on M1/M2/M3/M4 Macs by applying full bundle-level ad-hoc signing (`signingIdentity: "-"`) so `Contents/_CodeSignature/CodeResources` and `Info.plist` are properly sealed across all macOS bundles.
+            - **In-App GitHub Releases Update Checker**: Added an **Updates** panel in **Settings** (`Cmd/Ctrl + ,`) with semantic version comparison, formatted release notes, automatic startup update checks, and 1-click platform installer downloads.
+            - **Documentation & Transparency**: Added [`CHANGELOG.md`](https://github.com/Smit2553/RapidCal/blob/main/CHANGELOG.md) and AI-assisted development / daily dogfooding disclosure in `README.md`.
+
             ### Downloads by Platform
             - **macOS (Universal — Apple Silicon & Intel)**: `RapidCal___VERSION___universal.dmg` / `RapidCal.app.tar.gz`
             - **macOS (Apple Silicon M1/M2/M3/M4)**: `RapidCal___VERSION___aarch64.dmg`
@@ -177,3 +182,27 @@ jobs:
           releaseDraft: true
           prerelease: ${{ inputs.prerelease || false }}
           args: ${{ matrix.args }}
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: publish-tauri
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Publish draft release once all platform installers are uploaded
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG_NAME="${{ github.ref_name }}"
+          elif [ -n "${{ inputs.tag_name }}" ] && [ "${{ inputs.tag_name }}" != "v__VERSION__" ]; then
+            TAG_NAME="${{ inputs.tag_name }}"
+          else
+            TAG_NAME="v${VERSION}"
+          fi
+          echo "Publishing release ${TAG_NAME}..."
+          gh release edit "${TAG_NAME}" --draft=false --latest
+

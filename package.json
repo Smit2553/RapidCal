@@ -1,7 +1,7 @@
 {
   "name": "rapidcal",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Blazingly fast cross-platform desktop calendar engineered in Rust & SolidJS with Google & Microsoft Outlook multi-account sync",
   "type": "module",
   "scripts": {
