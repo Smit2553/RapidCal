@@ -172,6 +172,8 @@ jobs:
             - **macOS (Intel x86_64)**: `RapidCal___VERSION___x64.dmg`
             - **Windows (x64)**: `RapidCal___VERSION___x64-setup.exe` (NSIS) or `RapidCal___VERSION___x64_en-US.msi` (MSI)
             - **Linux (x86_64)**: `RapidCal___VERSION___amd64.AppImage`, `RapidCal___VERSION___amd64.deb`, or `RapidCal-__VERSION__-1.x86_64.rpm`
+
+            > **macOS First-Launch Note:** RapidCal builds are ad-hoc signed (`signingIdentity: "-"`) and not yet notarized with a paid Apple Developer ID. On first launch, if macOS displays an unverified developer prompt, open **System Settings → Privacy & Security → Open Anyway** (or run `xattr -cr /Applications/RapidCal.app`).
           releaseDraft: true
           prerelease: ${{ inputs.prerelease || false }}
           args: ${{ matrix.args }}
