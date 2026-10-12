@@ -134,6 +134,86 @@ pub async fn connect_ics_account(
     Ok(account)
 }
 
+/// Imports a local `.ics` / `.ical` file as a read-only `"ics"` calendar account.
+pub fn import_ics_file(
+    db: &Database,
+    file_name: &str,
+    ics_content: &str,
+    custom_name: Option<String>,
+) -> Result<Account, String> {
+    if !ics_content.contains("BEGIN:VCALENDAR") {
+        return Err(
+            "The selected file is not a valid iCalendar (.ics) file (missing BEGIN:VCALENDAR)."
+                .to_string(),
+        );
+    }
+
+    let parsed = parse_ics_feed(ics_content)?;
+
+    let clean_file_name = std::path::Path::new(file_name.trim())
+        .file_name()
+        .and_then(|s| s.to_str())
+        .filter(|s| !s.is_empty())
+        .unwrap_or("calendar.ics");
+    let file_stem = clean_file_name
+        .strip_suffix(".ics")
+        .or_else(|| clean_file_name.strip_suffix(".ICS"))
+        .or_else(|| clean_file_name.strip_suffix(".ical"))
+        .or_else(|| clean_file_name.strip_suffix(".ICAL"))
+        .unwrap_or(clean_file_name);
+
+    let remote_id = format!("local-ics://{}", clean_file_name);
+    let mut hasher = Sha256::new();
+    hasher.update(remote_id.to_ascii_lowercase().as_bytes());
+    let digest = format!("{:x}", hasher.finalize());
+    let short_hash = &digest[..16];
+
+    let acc_id = format!("acc-ics-{}", short_hash);
+    let cal_id = format!("cal-ics-{}", short_hash);
+
+    let resolved_name = custom_name
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .or(parsed.calendar_name.clone())
+        .unwrap_or_else(|| file_stem.to_string());
+
+    let now_iso = Utc::now().to_rfc3339();
+    let account = Account {
+        id: acc_id.clone(),
+        provider: "ics".to_string(),
+        email: clean_file_name.to_string(),
+        display_name: resolved_name.clone(),
+        avatar_url: None,
+        status: "connected".to_string(),
+        last_synced_at: Some(now_iso.clone()),
+        created_at: now_iso,
+    };
+    db.upsert_account(&account)?;
+
+    let existing_cal = db.list_calendars()?.into_iter().find(|c| c.id == cal_id);
+
+    let calendar = Calendar {
+        id: cal_id,
+        account_id: acc_id,
+        remote_id,
+        name: resolved_name,
+        color_hex: existing_cal
+            .as_ref()
+            .map(|c| c.color_hex.clone())
+            .unwrap_or_else(|| "#10b981".to_string()),
+        is_visible: existing_cal.as_ref().map(|c| c.is_visible).unwrap_or(true),
+        is_primary: false,
+        access_role: "reader".to_string(),
+        sync_token: None,
+        timezone: parsed.timezone.clone(),
+    };
+    db.upsert_calendar(&calendar)?;
+
+    apply_parsed_ics_events(db, &calendar, &parsed)?;
+
+    Ok(account)
+}
+
 /// Syncs all `.ics` calendars belonging to an `"ics"` account.
 pub async fn sync_ics_account(
     client: &Client,
@@ -148,6 +228,9 @@ pub async fn sync_ics_account(
 
     let mut total_synced = 0usize;
     for mut cal in calendars {
+        if cal.remote_id.starts_with("local-ics://") {
+            continue;
+        }
         let feed_url = normalize_ics_url(&cal.remote_id)?;
         let body = fetch_ics_text(client, &feed_url).await?;
         let parsed = parse_ics_feed(&body)?;
@@ -911,5 +994,39 @@ mod tests {
         // 2026-10-12 10:30:00 in America/Phoenix (UTC-7) == 2026-10-12 17:30:00 UTC
         assert_eq!(ev.start_ts, 1_791_826_200);
         assert_eq!(ev.end_ts - ev.start_ts, 75 * 60);
+    }
+
+    #[test]
+    fn test_import_ics_file_persists_account_calendar_and_events() {
+        let db = Database::open_in_memory().expect("in-memory db");
+        let sample_ics = concat!(
+            "BEGIN:VCALENDAR\r\n",
+            "VERSION:2.0\r\n",
+            "X-WR-CALNAME:Team Releases\r\n",
+            "BEGIN:VEVENT\r\n",
+            "UID:release-v1-0\r\n",
+            "SUMMARY:v1.0 Launch\r\n",
+            "DTSTART:20261015T160000Z\r\n",
+            "DTEND:20261015T170000Z\r\n",
+            "STATUS:CONFIRMED\r\n",
+            "END:VEVENT\r\n",
+            "END:VCALENDAR\r\n"
+        );
+
+        let acc = import_ics_file(
+            &db,
+            "releases.ics",
+            sample_ics,
+            Some("Product Releases".to_string()),
+        )
+        .expect("should import .ics file");
+        assert_eq!(acc.provider, "ics");
+        assert_eq!(acc.email, "releases.ics");
+        assert_eq!(acc.display_name, "Product Releases");
+
+        let events = db
+            .get_viewport_events(1_792_000_000, 1_792_200_000)
+            .expect("viewport events");
+        assert!(events.iter().any(|e| e.title == "v1.0 Launch"));
     }
 }

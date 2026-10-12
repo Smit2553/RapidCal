@@ -677,6 +677,65 @@ export const api = {
     );
   },
 
+  async importIcsFile(
+    fileName: string,
+    icsContent: string,
+    name?: string
+  ): Promise<Account> {
+    if (isTauriRuntime())
+      return invoke<Account>("import_ics_file", {
+        fileName,
+        icsContent,
+        name: name?.trim() ? name.trim() : null,
+      });
+    if (!icsContent.includes("BEGIN:VCALENDAR")) {
+      throw new Error(
+        "The selected file is not a valid iCalendar (.ics) file (missing BEGIN:VCALENDAR)."
+      );
+    }
+    initFallbackSeed();
+    const cleanFileName = fileName.trim() || "calendar.ics";
+    const fileStem = cleanFileName.replace(/\.(ics|ical)$/i, "") || "Calendar";
+    const calNameMatch = icsContent.match(/X-WR-CALNAME:([^\r\n]+)/i);
+    const resolvedName =
+      name?.trim() || calNameMatch?.[1]?.trim() || fileStem;
+    const slug = cleanFileName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const accId = `acc-ics-${slug}`;
+    const calId = `cal-ics-${slug}`;
+    const nowIso = new Date().toISOString();
+
+    const account: Account = {
+      id: accId,
+      provider: "ics",
+      email: cleanFileName,
+      displayName: resolvedName,
+      avatarUrl: null,
+      status: "connected",
+      lastSyncedAt: nowIso,
+      createdAt: nowIso,
+    };
+    fallbackAccounts = [
+      ...fallbackAccounts.filter((a) => a.id !== accId),
+      account,
+    ];
+    fallbackCalendars = [
+      ...fallbackCalendars.filter((c) => c.id !== calId),
+      {
+        id: calId,
+        accountId: accId,
+        remoteId: `local-ics://${cleanFileName}`,
+        name: resolvedName,
+        colorHex: "#10b981",
+        isVisible: true,
+        isPrimary: false,
+        accessRole: "reader",
+        syncToken: null,
+        timezone: "UTC",
+      },
+    ];
+    return account;
+  },
+
   async listCalendars(): Promise<Calendar[]> {
     if (isTauriRuntime()) return invoke<Calendar[]>("list_calendars");
     initFallbackSeed();
