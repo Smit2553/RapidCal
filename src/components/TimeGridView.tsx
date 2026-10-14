@@ -208,12 +208,13 @@ export function TimeGridView() {
   });
 
   return (
-    <div class="flex-1 flex flex-col min-w-0 min-h-0 bg-zinc-950 light:bg-white select-none">
+    <div
+      ref={scrollContainerRef}
+      class="flex-1 flex flex-col min-w-0 min-h-0 overflow-y-auto relative bg-zinc-950 light:bg-white select-none"
+      style={{ "scrollbar-gutter": "stable" }}
+    >
       {/* Sticky Column Header Row: Timezone Labels + Day Headers */}
-      <div
-        class="flex border-b border-zinc-800/80 light:border-zinc-200 bg-zinc-950/90 light:bg-zinc-50 shrink-0 overflow-y-hidden"
-        style={{ "scrollbar-gutter": "stable" }}
-      >
+      <div class="sticky top-0 z-40 flex border-b border-zinc-800/80 light:border-zinc-200 bg-zinc-950 light:bg-zinc-50 shrink-0">
         {/* Timezone Gutter Header */}
         <div
           class={`${
@@ -244,20 +245,25 @@ export function TimeGridView() {
 
         {/* Day Column Headers */}
         <div
-          class="flex-1 grid"
+          class="flex-1 min-w-0 grid"
           style={{
             "grid-template-columns": `repeat(${visibleDays().length}, minmax(0, 1fr))`,
           }}
         >
           <For each={visibleDays()}>
             {(day) => {
+              const dayStartTs = () =>
+                Math.floor(startOfDay(day).getTime() / 1000);
               const isToday = () => isSameDay(day, nowDate());
               const dayName = new Intl.DateTimeFormat("en-US", {
                 weekday: "short",
               }).format(day);
 
               return (
-                <div class="border-r last:border-r-0 border-zinc-800/80 light:border-zinc-200 px-2.5 py-2 flex flex-col gap-1">
+                <div
+                  data-day-start-ts={dayStartTs()}
+                  class="min-w-0 border-r last:border-r-0 border-zinc-800/80 light:border-zinc-200 px-2.5 py-2 flex flex-col gap-1"
+                >
                   <div class="flex items-center justify-between">
                     <span
                       class={`text-xs font-medium uppercase tracking-wider ${
@@ -307,11 +313,10 @@ export function TimeGridView() {
         </div>
       </div>
 
-      {/* Scrollable 24-Hour Precision Time Grid */}
+      {/* 24-Hour Precision Time Grid */}
       <div
-        ref={scrollContainerRef}
-        class="flex-1 overflow-y-auto relative flex"
-        style={{ "scrollbar-gutter": "stable" }}
+        class="flex relative shrink-0 overflow-hidden"
+        style={{ height: `${24 * hourHeightPx()}px` }}
       >
         {/* Timezone Gutter */}
         <div
@@ -354,7 +359,7 @@ export function TimeGridView() {
 
         {/* Day Columns Canvas */}
         <div
-          class="flex-1 grid relative"
+          class="flex-1 min-w-0 grid relative"
           style={{
             "grid-template-columns": `repeat(${visibleDays().length}, minmax(0, 1fr))`,
             height: `${24 * hourHeightPx()}px`,
@@ -396,7 +401,7 @@ export function TimeGridView() {
                 <div
                   data-day-start-ts={dayStartTs()}
                   onMouseDown={handleGridMouseDown}
-                  class={`relative border-r last:border-r-0 border-zinc-800/80 light:border-zinc-200 ${
+                  class={`min-w-0 relative border-r last:border-r-0 border-zinc-800/80 light:border-zinc-200 ${
                     isToday()
                       ? "bg-indigo-950/[0.07] light:bg-indigo-50/30"
                       : ""

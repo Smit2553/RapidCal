@@ -157,7 +157,7 @@ const SETTINGS_NAV: NavItem[] = [
   {
     id: "accounts",
     label: "Connected Accounts",
-    description: "Google Calendar and Microsoft Outlook",
+    description: "Google, Outlook, and ICS calendars",
     icon: UsersIcon,
   },
   {
@@ -212,6 +212,7 @@ export function SettingsView() {
   const [icsFeedUrl, setIcsFeedUrl] = createSignal("");
   const [icsFeedName, setIcsFeedName] = createSignal("");
   const [isConnectingIcs, setIsConnectingIcs] = createSignal(false);
+  const [showIcsBox, setShowIcsBox] = createSignal(false);
 
   // Diagnostics & Modals state
   const [selectedPayload, setSelectedPayload] = createSignal<string | null>(null);
@@ -220,6 +221,7 @@ export function SettingsView() {
   const [pasteText, setPasteText] = createSignal("");
   const [importErrorMessage, setImportErrorMessage] = createSignal<string | null>(null);
   let fileInputRef: HTMLInputElement | undefined;
+  let icsFileInputRef: HTMLInputElement | undefined;
   const [resetModalOpen, setResetModalOpen] = createSignal(false);
   const [resetPrefsChecked, setResetPrefsChecked] = createSignal(true);
   const [isResetting, setIsResetting] = createSignal(false);
@@ -392,6 +394,7 @@ export function SettingsView() {
       await Promise.all([refreshMetadata(), refreshViewport()]);
       setIcsFeedUrl("");
       setIcsFeedName("");
+      setShowIcsBox(false);
       setAuthStatusMsg(`Subscribed to ${acc.displayName}!`);
       showToast(`Subscribed to ${acc.displayName}`);
     } catch (err) {
@@ -399,6 +402,43 @@ export function SettingsView() {
     } finally {
       setIsConnectingIcs(false);
     }
+  };
+
+  const handleIcsFileUpload = (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    const file = target.files?.[0];
+    if (!file) return;
+
+    setIsConnectingIcs(true);
+    setAuthStatusMsg(`Importing ${file.name}…`);
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      try {
+        const content = (ev.target?.result as string) || "";
+        const acc = await api.importIcsFile(
+          file.name,
+          content,
+          icsFeedName().trim() || undefined
+        );
+        await Promise.all([refreshMetadata(), refreshViewport()]);
+        setIcsFeedUrl("");
+        setIcsFeedName("");
+        setShowIcsBox(false);
+        setAuthStatusMsg(`Imported ${acc.displayName}!`);
+        showToast(`Imported ${acc.displayName}`);
+      } catch (err) {
+        setAuthStatusMsg(err instanceof Error ? err.message : String(err));
+      } finally {
+        setIsConnectingIcs(false);
+        target.value = "";
+      }
+    };
+    reader.onerror = () => {
+      setIsConnectingIcs(false);
+      setAuthStatusMsg("Failed to read the selected .ics file.");
+      target.value = "";
+    };
+    reader.readAsText(file);
   };
 
   const localTimezoneName = createMemo(() => {
@@ -1069,10 +1109,10 @@ export function SettingsView() {
                       Connected Accounts ({accounts().length})
                     </h3>
                     <p class="text-xs text-zinc-500">
-                      Link your Google Calendar or Microsoft Outlook accounts to view and manage all your schedules in one unified view.
+                      Link your Google Calendar, Microsoft Outlook, or any .ICS calendar feed to view and manage all your schedules in one unified view.
                     </p>
                   </div>
-                  <div class="flex items-center gap-2">
+                  <div class="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={() => void handleConnectProvider("google")}
@@ -1089,8 +1129,99 @@ export function SettingsView() {
                       <PlusIcon class="w-3.5 h-3.5 shrink-0" />
                       <span>Connect Outlook</span>
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowIcsBox((v) => !v)}
+                      class="h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-sm"
+                    >
+                      <PlusIcon class="w-3.5 h-3.5 shrink-0" />
+                      <span>Subscribe via ICS</span>
+                    </button>
                   </div>
                 </div>
+
+                <Show when={showIcsBox()}>
+                  <div class="rounded-xl border border-zinc-800 light:border-zinc-200 bg-zinc-950/60 light:bg-white p-4 space-y-3">
+                    <div class="flex items-start justify-between gap-2">
+                      <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                          <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-200 light:text-zinc-800">
+                            Subscribe or Import .ICS / iCal Calendar
+                          </h4>
+                          <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                            Read-Only
+                          </span>
+                        </div>
+                        <p class="text-xs text-zinc-500">
+                          Connect any published <code>.ics</code> or <code>webcal://</code> calendar URL, or upload a local <code>.ics</code> / <code>.ical</code> file from any calendar provider.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowIcsBox(false)}
+                        class="text-xs text-zinc-400 hover:text-zinc-200 light:hover:text-zinc-800"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+
+                    <form
+                      onSubmit={(e) => void handleConnectIcsFeed(e)}
+                      class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end"
+                    >
+                      <div class="sm:col-span-3 space-y-1">
+                        <label class="text-[11px] font-medium text-zinc-400 light:text-zinc-600">
+                          Calendar Label (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={icsFeedName()}
+                          onInput={(e) => setIcsFeedName(e.currentTarget.value)}
+                          placeholder="e.g. Work Schedule"
+                          class="w-full h-8 px-2.5 rounded-lg border border-zinc-800 light:border-zinc-300 bg-zinc-950 light:bg-white text-xs text-zinc-200 light:text-zinc-800"
+                        />
+                      </div>
+                      <div class="sm:col-span-5 space-y-1">
+                        <label class="text-[11px] font-medium text-zinc-400 light:text-zinc-600">
+                          Published .ICS or webcal:// URL
+                        </label>
+                        <input
+                          type="text"
+                          value={icsFeedUrl()}
+                          onInput={(e) => setIcsFeedUrl(e.currentTarget.value)}
+                          placeholder="https://example.com/calendar/feed.ics"
+                          class="w-full h-8 px-2.5 rounded-lg border border-zinc-800 light:border-zinc-300 bg-zinc-950 light:bg-white text-xs font-mono-tabular text-zinc-200 light:text-zinc-800"
+                        />
+                      </div>
+                      <div class="sm:col-span-4 flex items-center gap-2">
+                        <button
+                          type="submit"
+                          disabled={isConnectingIcs()}
+                          class="flex-1 h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap"
+                        >
+                          <PlusIcon class="w-3.5 h-3.5 shrink-0" />
+                          <span>{isConnectingIcs() ? "Adding…" : "Add URL"}</span>
+                        </button>
+                        <input
+                          type="file"
+                          ref={icsFileInputRef}
+                          onChange={handleIcsFileUpload}
+                          accept=".ics,.ical,text/calendar"
+                          class="hidden"
+                        />
+                        <button
+                          type="button"
+                          disabled={isConnectingIcs()}
+                          onClick={() => icsFileInputRef?.click()}
+                          class="flex-1 h-8 px-3 rounded-lg border border-zinc-700 light:border-zinc-300 hover:bg-zinc-800 light:hover:bg-zinc-100 disabled:opacity-50 text-zinc-200 light:text-zinc-800 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap"
+                        >
+                          <UploadIcon class="w-3.5 h-3.5 shrink-0" />
+                          <span>Upload .ICS</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </Show>
 
                 <Show when={authStatusMsg()}>
                   <div class="p-3 rounded-lg border border-indigo-500/40 bg-indigo-500/10 text-xs text-indigo-200 light:text-indigo-800 flex items-center justify-between">
@@ -1117,7 +1248,7 @@ export function SettingsView() {
                         No calendar accounts connected yet
                       </div>
                       <p class="text-[11px] text-zinc-500 max-w-sm mx-auto">
-                        Click either button above to sign in securely with your standard Google Workspace or Microsoft 365 credentials.
+                        Click a button above to sign in with Google or Microsoft, or subscribe to any published .ICS calendar URL.
                       </p>
                     </div>
                   }
@@ -1180,63 +1311,6 @@ export function SettingsView() {
                     </For>
                   </div>
                 </Show>
-              </section>
-
-              {/* ICS / WebCal Feed Subscription Card (Enterprise / University Outlook Workaround) */}
-              <section class="rounded-xl border border-zinc-800 light:border-zinc-200 bg-zinc-900/30 light:bg-zinc-50 p-4 sm:p-5 space-y-3.5">
-                <div class="space-y-1">
-                  <div class="flex items-center gap-2">
-                    <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-300 light:text-zinc-700">
-                      Subscribe via .ICS / WebCal Feed (Read-Only)
-                    </h3>
-                    <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                      Enterprise / University Outlook Compatible
-                    </span>
-                  </div>
-                  <p class="text-xs text-zinc-500">
-                    Some locked-down enterprise or university Microsoft 365 tenants block third-party OAuth apps. You can connect those schedules via a published <code>.ics</code> link (<strong class="text-zinc-300 light:text-zinc-700">Outlook Web → Settings → Calendar → Shared calendars → Publish a calendar → Can view all details → Copy ICS link</strong>).
-                  </p>
-                </div>
-
-                <form
-                  onSubmit={(e) => void handleConnectIcsFeed(e)}
-                  class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end"
-                >
-                  <div class="sm:col-span-4 space-y-1">
-                    <label class="text-[11px] font-medium text-zinc-400 light:text-zinc-600">
-                      Calendar Label (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={icsFeedName()}
-                      onInput={(e) => setIcsFeedName(e.currentTarget.value)}
-                      placeholder="e.g. ASU Outlook / Work Schedule"
-                      class="w-full h-8 px-2.5 rounded-lg border border-zinc-800 light:border-zinc-300 bg-zinc-950 light:bg-white text-xs text-zinc-200 light:text-zinc-800"
-                    />
-                  </div>
-                  <div class="sm:col-span-6 space-y-1">
-                    <label class="text-[11px] font-medium text-zinc-400 light:text-zinc-600">
-                      Published .ICS or webcal:// URL
-                    </label>
-                    <input
-                      type="text"
-                      value={icsFeedUrl()}
-                      onInput={(e) => setIcsFeedUrl(e.currentTarget.value)}
-                      placeholder="https://outlook.office365.com/owa/calendar/.../reachcalendar.ics"
-                      class="w-full h-8 px-2.5 rounded-lg border border-zinc-800 light:border-zinc-300 bg-zinc-950 light:bg-white text-xs font-mono-tabular text-zinc-200 light:text-zinc-800"
-                    />
-                  </div>
-                  <div class="sm:col-span-2">
-                    <button
-                      type="submit"
-                      disabled={isConnectingIcs()}
-                      class="w-full h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-sm"
-                    >
-                      <PlusIcon class="w-3.5 h-3.5 shrink-0" />
-                      <span>{isConnectingIcs() ? "Adding…" : "Add ICS"}</span>
-                    </button>
-                  </div>
-                </form>
               </section>
 
               {/* Discreet Enterprise & Power-User Referral Card */}
