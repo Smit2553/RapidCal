@@ -8,6 +8,10 @@
 > [!NOTE]
 > **AI Disclosure:** This project was built with the assistance of AI coding agents, and is actively used and dogfooded every day by me (the developer) as my primary desktop calendar.
 
+[![RapidCal Promotional Launch Film](docs/promo-poster.png)](docs/promo.mp4)
+
+> **▶ Promotional Launch Video (`1080p 60fps`)**: Watch [`docs/promo.mp4`](docs/promo.mp4) (or regenerate it via `python3 scripts/generate_promo_video.py`).
+
 ---
 
 ## Key Features

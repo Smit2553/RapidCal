@@ -50,6 +50,7 @@
           aria-label="Primary Navigation"
           onclick="document.getElementById('site-header').classList.remove('nav-open')"
         >
+          <a href="#promo-video">Launch Film</a>
           <a href="#features">Features</a>
           <a href="#security">Privacy &amp; OAuth</a>
           <a href="#shortcuts">Shortcuts</a>
@@ -98,6 +99,14 @@
               Download for macOS, Windows &amp; Linux
             </a>
             <a
+              href="#promo-video"
+              id="hero-watch-film-btn"
+              class="btn btn-secondary"
+              data-promo-trigger="play"
+            >
+              ▶ Watch 32s Launch Film
+            </a>
+            <a
               href="https://github.com/Smit2553/RapidCal"
               class="btn btn-secondary"
               target="_blank"
@@ -116,6 +125,108 @@
             <a href="/terms"><strong>Terms of Service</strong></a>
             <span>•</span>
             <a href="#security">Google API Limited Use Disclosure</a>
+          </div>
+
+          <!-- Animated Promotional Launch Film Showcase (Zero Initial Video Bytes, Click-to-Stream Facade) -->
+          <div id="promo-video" class="promo-video-card" aria-label="RapidCal Promotional Launch Video">
+            <div class="app-preview-bar">
+              <div class="window-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="mono">RapidCal — Official 1080p 60fps Product Launch Film (0:32)</div>
+              <div class="promo-bar-actions">
+                <button
+                  type="button"
+                  id="promo-mute-toggle"
+                  class="promo-bar-btn mono"
+                  aria-label="Toggle promotional video audio"
+                >
+                  🔊 Stereo Audio
+                </button>
+                <span id="promo-perf-badge" class="promo-perf-badge mono">On-Demand Stream</span>
+              </div>
+            </div>
+
+            <div class="promo-video-wrap">
+              <video
+                id="rapidcal-promo-player"
+                class="promo-video-player"
+                controls
+                playsinline
+                preload="none"
+                poster="./promo-poster.webp"
+                width="1920"
+                height="1080"
+              >
+                <source src="./promo.mp4" type="video/mp4" />
+                Your browser does not support HTML5 video. You can
+                <a href="./promo.mp4">download the RapidCal promotional video (MP4)</a> directly.
+              </video>
+
+              <button
+                type="button"
+                id="promo-video-overlay"
+                class="promo-video-overlay"
+                aria-label="Play RapidCal 32-second 1080p 60fps promotional launch film"
+              >
+                <picture class="promo-poster-picture">
+                  <source srcset="./promo-poster.webp" type="image/webp" />
+                  <img
+                    src="./promo-poster.png"
+                    alt="RapidCal — Sub-Millisecond Desktop Calendar Launch Film Preview"
+                    width="1920"
+                    height="1080"
+                    decoding="async"
+                    fetchpriority="high"
+                    class="promo-poster-img"
+                  />
+                </picture>
+                <span class="promo-play-glass">
+                  <span class="promo-play-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+                      <path d="M8 5.14v13.72a1 1 0 0 0 1.55.83l11-6.86a1 1 0 0 0 0-1.66l-11-6.86A1 1 0 0 0 8 5.14z" />
+                    </svg>
+                  </span>
+                  <span class="promo-play-copy">
+                    <span class="promo-play-title">Watch 32s Launch Film</span>
+                    <span class="promo-play-meta mono">1080p 60fps • Stereo Audio • Instant Stream</span>
+                  </span>
+                </span>
+              </button>
+            </div>
+
+            <div class="promo-chapters" role="group" aria-label="Jump to launch film chapter">
+              <button type="button" class="promo-chapter-pill is-active" data-seek="0">
+                <span class="mono">0:00</span>
+                <span>&lt;1ms Engine</span>
+              </button>
+              <button type="button" class="promo-chapter-pill" data-seek="4.5">
+                <span class="mono">0:04</span>
+                <span>Unified Grid</span>
+              </button>
+              <button type="button" class="promo-chapter-pill" data-seek="10.5">
+                <span class="mono">0:10</span>
+                <span>⌘K Rust NLP</span>
+              </button>
+              <button type="button" class="promo-chapter-pill" data-seek="16.5">
+                <span class="mono">0:16</span>
+                <span>⌘J &amp; [Busy] Shield</span>
+              </button>
+              <button type="button" class="promo-chapter-pill" data-seek="21.5">
+                <span class="mono">0:21</span>
+                <span>Views &amp; Themes</span>
+              </button>
+              <button type="button" class="promo-chapter-pill" data-seek="25.5">
+                <span class="mono">0:25</span>
+                <span>Zero-Cloud PKCE</span>
+              </button>
+              <button type="button" class="promo-chapter-pill" data-seek="28.8">
+                <span class="mono">0:28</span>
+                <span>Get RapidCal</span>
+              </button>
+            </div>
           </div>
 
           <!-- Interactive-style Desktop App Preview -->
@@ -461,6 +572,191 @@
         } catch (_) {
           // Keep badge hidden if offline or no public release exists yet
         }
+      })();
+
+      (function initPromoVideoShowcase() {
+        const card = document.getElementById("promo-video");
+        const video = document.getElementById("rapidcal-promo-player");
+        const overlay = document.getElementById("promo-video-overlay");
+        const muteBtn = document.getElementById("promo-mute-toggle");
+        const perfBadge = document.getElementById("promo-perf-badge");
+        const chapterBtns = Array.from(document.querySelectorAll(".promo-chapter-pill"));
+        if (!card || !video || !overlay) return;
+
+        // Progressive enhancement: enable custom click-to-play facade when JS is active
+        card.classList.add("js-facade");
+        video.controls = false;
+
+        let metadataWarmed = false;
+        let lastChapterSync = 0;
+        let pendingSeekSec = null;
+        let ignoreOffscreenUntil = 0;
+
+        function canWarmMetadata() {
+          const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+          if (conn && (conn.saveData || conn.effectiveType === "slow-2g" || conn.effectiveType === "2g")) {
+            return false;
+          }
+          return true;
+        }
+
+        function warmUpMetadata() {
+          if (metadataWarmed) return;
+          metadataWarmed = true;
+          if (canWarmMetadata() && video.preload === "none") {
+            video.preload = "metadata";
+          }
+        }
+
+        function updateMuteUI() {
+          if (!muteBtn) return;
+          const isMuted = video.muted || video.volume === 0;
+          muteBtn.textContent = isMuted ? "🔇 Muted" : "🔊 Stereo Audio";
+          muteBtn.setAttribute("aria-pressed", isMuted ? "true" : "false");
+        }
+
+        function syncActiveChapter(t) {
+          let activeIdx = 0;
+          for (let i = 0; i < chapterBtns.length; i++) {
+            const seekVal = parseFloat(chapterBtns[i].getAttribute("data-seek") || "0");
+            if (t + 0.15 >= seekVal) {
+              activeIdx = i;
+            }
+          }
+          chapterBtns.forEach((btn, idx) => {
+            const active = idx === activeIdx;
+            btn.classList.toggle("is-active", active);
+            if (active) {
+              btn.setAttribute("aria-current", "step");
+            } else {
+              btn.removeAttribute("aria-current");
+            }
+          });
+        }
+
+        video.addEventListener("loadedmetadata", () => {
+          if (typeof pendingSeekSec === "number" && !Number.isNaN(pendingSeekSec)) {
+            const target = pendingSeekSec;
+            pendingSeekSec = null;
+            try {
+              video.currentTime = target;
+            } catch (_) {}
+          }
+        });
+
+        function activateAndPlay(seekSec) {
+          ignoreOffscreenUntil = performance.now() + 1400;
+          card.classList.remove("js-facade");
+          card.classList.add("is-activated");
+          video.controls = true;
+          if (video.preload === "none") {
+            video.preload = "auto";
+          }
+
+          if (typeof seekSec === "number" && !Number.isNaN(seekSec)) {
+            syncActiveChapter(seekSec);
+            lastChapterSync = performance.now();
+            if (video.readyState >= 1) {
+              pendingSeekSec = null;
+              try {
+                video.currentTime = seekSec;
+              } catch (_) {}
+            } else {
+              pendingSeekSec = seekSec;
+            }
+          } else {
+            pendingSeekSec = null;
+          }
+
+          const playPromise = video.play();
+          if (playPromise && typeof playPromise.catch === "function") {
+            playPromise.catch((err) => {
+              if (err && err.name === "AbortError") return;
+              video.muted = true;
+              updateMuteUI();
+              video.play().catch(() => {});
+            });
+          }
+        }
+
+        updateMuteUI();
+
+        overlay.addEventListener("pointerenter", warmUpMetadata, { passive: true });
+        overlay.addEventListener("focus", warmUpMetadata, { passive: true });
+        overlay.addEventListener("click", () => activateAndPlay());
+
+        document.querySelectorAll('[data-promo-trigger="play"], a[href="#promo-video"]').forEach((el) => {
+          el.addEventListener("pointerenter", warmUpMetadata, { passive: true });
+          el.addEventListener("focus", warmUpMetadata, { passive: true });
+          if (el.getAttribute("data-promo-trigger") === "play") {
+            el.addEventListener("click", () => {
+              activateAndPlay();
+            });
+          }
+        });
+
+        chapterBtns.forEach((btn) => {
+          btn.addEventListener("pointerenter", warmUpMetadata, { passive: true });
+          btn.addEventListener("click", () => {
+            const seekSec = parseFloat(btn.getAttribute("data-seek") || "0");
+            activateAndPlay(seekSec);
+          });
+        });
+
+        if (muteBtn) {
+          muteBtn.addEventListener("click", () => {
+            video.muted = !video.muted;
+            updateMuteUI();
+          });
+        }
+
+        video.addEventListener("volumechange", updateMuteUI);
+        video.addEventListener("play", () => {
+          card.classList.remove("js-facade");
+          card.classList.add("is-activated");
+          video.controls = true;
+          if (perfBadge) perfBadge.textContent = "1080p 60fps • Active";
+        });
+        video.addEventListener("pause", () => {
+          if (perfBadge && !video.ended) perfBadge.textContent = "Paused • 0% GPU";
+        });
+        video.addEventListener("ended", () => {
+          if (perfBadge) perfBadge.textContent = "Completed • Replay Ready";
+        });
+        video.addEventListener("timeupdate", () => {
+          if (pendingSeekSec !== null) return;
+          const now = performance.now();
+          if (now - lastChapterSync < 200) return;
+          lastChapterSync = now;
+          syncActiveChapter(video.currentTime);
+        });
+
+        // Auto-pause 1080p60 decoding when scrolled out of view or tab hidden to prevent scroll/GPU lag
+        if ("IntersectionObserver" in window) {
+          const observer = new IntersectionObserver(
+            (entries) => {
+              for (const entry of entries) {
+                if (
+                  !entry.isIntersecting &&
+                  !video.paused &&
+                  !video.ended &&
+                  performance.now() > ignoreOffscreenUntil
+                ) {
+                  video.pause();
+                  if (perfBadge) perfBadge.textContent = "Auto-Paused Offscreen";
+                }
+              }
+            },
+            { threshold: 0.12 }
+          );
+          observer.observe(card);
+        }
+
+        document.addEventListener("visibilitychange", () => {
+          if (document.hidden && !video.paused && !video.ended) {
+            video.pause();
+          }
+        });
       })();
     </script>
   </body>
