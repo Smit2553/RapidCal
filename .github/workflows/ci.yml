@@ -42,7 +42,7 @@ jobs:
         run: npm run build
 
       - name: Upload frontend dist artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: rapidcal-frontend-dist
           path: dist/
